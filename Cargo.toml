@@ -35,3 +35,6 @@ serde_json = "1.0.32"
 
 [build-dependencies]
 askama = "0.7.2"
+
+[package.metadata.template_ci.clippy]
+allow_failure = false

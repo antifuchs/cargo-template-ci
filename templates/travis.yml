@@ -21,24 +21,36 @@ matrix:
   fast_finish: true
   include:
     {%- if rustfmt.run %}
-    - rust: "{{rustfmt.version}}"
+    - &rustfmt_build
+      rust: "{{rustfmt.version}}"
       env:
         - RUN_RUSTFMT=true
         - RUN_TEST=false
     {%- endif %}
     {%- if bench.run %}
-    - rust: "{{bench.version}}"
+    - &bench_build
+      rust: "{{bench.version}}"
       env:
         - RUN_BENCHMARK=true
         - RUN_TEST=false
     {%- endif %}
     {%- if clippy.run %}
-    - rust: "{{clippy.version}}"
+    - &clippy_build
+      rust: "{{clippy.version}}"
       env:
         - RUN_CLIPPY=true
         - RUN_TEST=false
     {%- endif %}
-  allow_failures: [] # TODO
+  allow_failures: {% if !(bench.run && bench.allow_failure) && !(clippy.run && clippy.allow_failure) && !(rustfmt.run && rustfmt.allow_failure) %}[]{% endif %}
+    {%- if bench.run && bench.allow_failure %}
+    - *bench_build
+    {%- endif %}
+    {%- if clippy.run && clippy.allow_failure %}
+    - *clippy_build
+    {%- endif %}
+    {%- if rustfmt.run && rustfmt.allow_failure %}
+    - *rustfmt_build
+    {%- endif %}
 
 before_script:
   {%- if rustfmt.run %}

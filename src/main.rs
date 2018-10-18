@@ -1,41 +1,74 @@
 use askama::Template;
 use cargo_metadata;
+use serde::de::{Deserialize, Deserializer};
 use serde_derive::Deserialize;
 use serde_json;
 
-#[derive(Debug, Deserialize)]
-struct Metadata<'a> {
-    #[serde(default)]
-    #[serde(borrow)]
-    template_ci: TemplateCIConfig<'a>,
+macro_rules! define_matrix_entry {
+    ($name:ident, ($run_default:expr, $version_default:expr, $allow_failure_default:expr)) => {
+        #[derive(Debug)]
+        struct $name<'a> {
+            run: bool,
+            version: &'a str,
+            allow_failure: bool,
+        }
+
+        impl<'a> Default for $name<'a> {
+            fn default() -> Self {
+                $name {
+                    run: $run_default,
+                    version: $version_default,
+                    allow_failure: $allow_failure_default,
+                }
+            }
+        }
+
+        // Since we can't easily (or at all?) pass default expresisons
+        // to serde, we have to define our own
+        // deserializer. Thankfully, you can deserialize into an
+        // intermediate struct and then assign / default the values
+        // from Default::default().
+        impl<'de: 'a, 'a> Deserialize<'de> for $name<'a> {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                #[derive(Deserialize)]
+                struct DeserializationStruct<'a> {
+                    run: Option<bool>,
+                    version: Option<&'a str>,
+                    allow_failure: Option<bool>,
+                }
+                let raw: DeserializationStruct = DeserializationStruct::deserialize(deserializer)?;
+                let res = $name {
+                    run: raw.run.unwrap_or(Self::default().run),
+                    version: raw.version.unwrap_or(Self::default().version),
+                    allow_failure: raw.allow_failure.unwrap_or(Self::default().allow_failure),
+                };
+                Ok(res)
+            }
+        }
+    };
 }
 
-#[derive(Debug, Deserialize)]
-struct MatrixEntry<'a> {
-    run: bool,
-    version: &'a str,
-}
-
-impl<'a> MatrixEntry<'a> {
-    fn new(version: &'a str, run: bool) -> MatrixEntry<'a> {
-        MatrixEntry { version, run }
-    }
-}
+define_matrix_entry!(BenchEntry, (false, "nightly", false));
+define_matrix_entry!(ClippyEntry, (true, "nightly", false));
+define_matrix_entry!(RustfmtEntry, (true, "stable", false));
 
 #[derive(Template, Debug, Deserialize)]
 #[template(path = "travis.yml")]
 struct TemplateCIConfig<'a> {
     #[serde(borrow)]
-    #[serde(default = "TemplateCIConfig::default_bench")]
-    bench: MatrixEntry<'a>,
+    #[serde(default)]
+    bench: BenchEntry<'a>,
 
     #[serde(borrow)]
-    #[serde(default = "TemplateCIConfig::default_clippy")]
-    clippy: MatrixEntry<'a>,
+    #[serde(default)]
+    clippy: ClippyEntry<'a>,
 
     #[serde(borrow)]
-    #[serde(default = "TemplateCIConfig::default_rustfmt")]
-    rustfmt: MatrixEntry<'a>,
+    #[serde(default)]
+    rustfmt: RustfmtEntry<'a>,
 
     #[serde(default = "TemplateCIConfig::default_os")]
     os: &'a str,
@@ -51,9 +84,9 @@ struct TemplateCIConfig<'a> {
 impl<'a> Default for TemplateCIConfig<'a> {
     fn default() -> Self {
         TemplateCIConfig {
-            clippy: MatrixEntry::new("nightly", true),
-            bench: MatrixEntry::new("nightly", false),
-            rustfmt: MatrixEntry::new("stable", true),
+            clippy: Default::default(),
+            bench: Default::default(),
+            rustfmt: Default::default(),
             dist: "xenial",
             os: "linux",
             versions: vec!["stable", "beta", "nightly"],
@@ -62,24 +95,24 @@ impl<'a> Default for TemplateCIConfig<'a> {
 }
 
 impl<'a> TemplateCIConfig<'a> {
-    fn default_bench() -> MatrixEntry<'a> {
-        Self::default().bench
-    }
-    fn default_clippy() -> MatrixEntry<'a> {
-        Self::default().clippy
-    }
-    fn default_rustfmt() -> MatrixEntry<'a> {
-        Self::default().rustfmt
-    }
-    fn default_dist() -> &'a str {
-        Self::default().dist
-    }
     fn default_os() -> &'a str {
         Self::default().os
     }
+
+    fn default_dist() -> &'a str {
+        Self::default().dist
+    }
+
     fn default_versions() -> Vec<&'a str> {
         Self::default().versions
     }
+}
+
+#[derive(Debug, Deserialize)]
+struct Metadata<'a> {
+    #[serde(default)]
+    #[serde(borrow)]
+    template_ci: TemplateCIConfig<'a>,
 }
 
 fn main() {
