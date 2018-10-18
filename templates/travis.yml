@@ -1,4 +1,7 @@
+os:
+  - "{{os}}"
 dist: "{{dist}}"
+
 language: rust
 sudo: required
 cache: cargo
@@ -7,9 +10,6 @@ rust:
   - stable
   - beta
   - nightly
-
-os:
-  - linux
 
 env:
   global:
@@ -20,20 +20,20 @@ env:
 matrix:
   fast_finish: true
   include:
-    {%- if run_rustfmt %}
-    - rust: "{{rustfmt_version}}"
+    {%- if rustfmt.run %}
+    - rust: "{{rustfmt.version}}"
       env:
         - RUN_RUSTFMT=true
         - RUN_TEST=false
     {%- endif %}
-    {%- if run_benchmark %}
-    - rust: "{{benchmark_version}}"
+    {%- if bench.run %}
+    - rust: "{{bench.version}}"
       env:
         - RUN_BENCHMARK=true
         - RUN_TEST=false
     {%- endif %}
-    {%- if run_clippy %}
-    - rust: "{{clippy_version}}"
+    {%- if clippy.run %}
+    - rust: "{{clippy.version}}"
       env:
         - RUN_CLIPPY=true
         - RUN_TEST=false
@@ -41,13 +41,13 @@ matrix:
   allow_failures: [] # TODO
 
 before_script:
-  {%- if run_rustfmt %}
+  {%- if rustfmt.run %}
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then
       rustup component add rustfmt-preview
       ;
     fi'
   {%- endif %}
-  {%- if run_clippy %}
+  {%- if clippy.run %}
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
       rm -f ~/.cargo/bin/clippy;
       cargo install --force clippy-nightly
@@ -60,19 +60,19 @@ script:
       cargo test
       ;
     fi'
-  {%- if run_rustfmt %}
+  {%- if rustfmt.run %}
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then
       cargo fmt -v -- --check
       ;
     fi'
   {%- endif %}
-  {%- if run_benchmark %}
+  {%- if bench.run %}
   - bash -c 'if [[ "$RUN_BENCH" == "true" ]]; then
       cargo bench
       ;
     fi'
   {%- endif %}
-  {%- if run_clippy %}
+  {%- if clippy.run %}
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
       cargo clippy -- -D warnings
       ;

@@ -10,17 +10,35 @@ struct Metadata<'a> {
     template_ci: TemplateCIConfig<'a>,
 }
 
+#[derive(Debug, Deserialize)]
+struct MatrixEntry<'a> {
+    run: bool,
+    version: &'a str,
+}
+
+impl<'a> MatrixEntry<'a> {
+    fn new(version: &'a str, run: bool) -> MatrixEntry<'a> {
+        MatrixEntry { version, run }
+    }
+}
+
 #[derive(Template, Debug, Deserialize)]
 #[template(path = "travis.yml")]
 struct TemplateCIConfig<'a> {
-    #[serde(default = "TemplateCIConfig::default_run_clippy")]
-    run_clippy: bool,
+    #[serde(borrow)]
+    #[serde(default = "TemplateCIConfig::default_bench")]
+    bench: MatrixEntry<'a>,
 
-    #[serde(default = "TemplateCIConfig::default_run_benchmark")]
-    run_benchmark: bool,
+    #[serde(borrow)]
+    #[serde(default = "TemplateCIConfig::default_clippy")]
+    clippy: MatrixEntry<'a>,
 
-    #[serde(default = "TemplateCIConfig::default_run_rustfmt")]
-    run_rustfmt: bool,
+    #[serde(borrow)]
+    #[serde(default = "TemplateCIConfig::default_rustfmt")]
+    rustfmt: MatrixEntry<'a>,
+
+    #[serde(default = "TemplateCIConfig::default_os")]
+    os: &'a str,
 
     #[serde(default = "TemplateCIConfig::default_dist")]
     dist: &'a str,
@@ -28,56 +46,39 @@ struct TemplateCIConfig<'a> {
     #[serde(default = "TemplateCIConfig::default_versions")]
     #[serde(borrow)]
     versions: Vec<&'a str>,
-
-    #[serde(default = "TemplateCIConfig::default_benchmark_version")]
-    benchmark_version: &'a str,
-
-    #[serde(default = "TemplateCIConfig::default_rustfmt_version")]
-    rustfmt_version: &'a str,
-
-    #[serde(default = "TemplateCIConfig::default_clippy_version")]
-    clippy_version: &'a str,
 }
 
 impl<'a> Default for TemplateCIConfig<'a> {
     fn default() -> Self {
         TemplateCIConfig {
-            run_clippy: false,
-            run_benchmark: false,
-            run_rustfmt: true,
+            clippy: MatrixEntry::new("nightly", true),
+            bench: MatrixEntry::new("nightly", false),
+            rustfmt: MatrixEntry::new("stable", true),
             dist: "xenial",
+            os: "linux",
             versions: vec!["stable", "beta", "nightly"],
-            benchmark_version: "nightly",
-            rustfmt_version: "stable",
-            clippy_version: "nightly",
         }
     }
 }
 
 impl<'a> TemplateCIConfig<'a> {
-    fn default_run_rustfmt() -> bool {
-        Self::default().run_rustfmt
+    fn default_bench() -> MatrixEntry<'a> {
+        Self::default().bench
     }
-    fn default_run_clippy() -> bool {
-        Self::default().run_clippy
+    fn default_clippy() -> MatrixEntry<'a> {
+        Self::default().clippy
     }
-    fn default_run_benchmark() -> bool {
-        Self::default().run_benchmark
+    fn default_rustfmt() -> MatrixEntry<'a> {
+        Self::default().rustfmt
     }
     fn default_dist() -> &'a str {
         Self::default().dist
     }
+    fn default_os() -> &'a str {
+        Self::default().os
+    }
     fn default_versions() -> Vec<&'a str> {
         Self::default().versions
-    }
-    fn default_clippy_version() -> &'a str {
-        Self::default().clippy_version
-    }
-    fn default_benchmark_version() -> &'a str {
-        Self::default().benchmark_version
-    }
-    fn default_rustfmt_version() -> &'a str {
-        Self::default().rustfmt_version
     }
 }
 
