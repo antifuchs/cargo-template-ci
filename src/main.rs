@@ -140,7 +140,7 @@ fn main() {
     let output =
         tempfile::NamedTempFile::new_in(dest_dir).expect("Could not create temporary file");
 
-    write!(&output, "# {:?}", config.template_ci).unwrap();
+    write!(&output, "# {:?}\n", config.template_ci).unwrap();
     write!(&output, "{}\n", config.template_ci.render().unwrap()).unwrap();
     output.persist(dest).unwrap();
 }
