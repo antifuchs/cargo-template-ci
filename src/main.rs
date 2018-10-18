@@ -119,11 +119,13 @@ struct Metadata<'a> {
 }
 
 fn main() {
-    let app = clap::App::new("cargo-template-ci").arg(
-        clap::Arg::with_name("travis-config")
-            .long("travis-config")
-            .value_name("PATH")
-            .takes_value(true),
+    let app = clap::App::new("cargo-template-ci").subcommand(
+        clap::SubCommand::with_name("template-ci").arg(
+            clap::Arg::with_name("travis-config")
+                .long("travis-config")
+                .value_name("PATH")
+                .takes_value(true),
+        ),
     );
     let matches = app.get_matches();
 
