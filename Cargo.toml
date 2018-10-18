@@ -1,0 +1,27 @@
+[package]
+edition = '2018'
+name = "cargo-template-ci"
+version = "0.0.1-dev"
+authors = ["Andreas Fuchs <asf@boinkor.net>"]
+license = "MIT"
+repository = "https://github.com/antifuchs/cargo-template-ci"
+readme = "README.md"
+description = "Generate a CI configuration from a template and Cargo config"
+documentation = "https://docs.rs/cargo-template-ci"
+
+[badges]
+travis-ci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
+maintenance = { status = "passively-maintained" }
+
+[package.metadata.release]
+sign-commit = false
+upload-doc = false
+pre-release-commit-message = "Release {{version}} 🎉🎉"
+pro-release-commit-message = "Start next development iteration {{version}}"
+tag-message = "Release {{prefix}}{{version}}"
+dev-version-ext = "dev"
+tag-prefix = "v"
+
+[dependencies]
+failure = "0.1.1"
+failure_derive = "0.1.1"
