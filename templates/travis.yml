@@ -62,7 +62,7 @@ before_script:
   {%- if clippy.run %}
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
       rm -f ~/.cargo/bin/clippy;
-      cargo install --force clippy-nightly
+      rustup component add clippy-preview
       ;
     fi'
   {%- endif %}
