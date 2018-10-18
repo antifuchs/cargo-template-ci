@@ -3,6 +3,9 @@ use cargo_metadata;
 use serde::de::{Deserialize, Deserializer};
 use serde_derive::Deserialize;
 use serde_json;
+use std::io::Write;
+use std::path::Path;
+use tempfile;
 
 macro_rules! define_matrix_entry {
     ($name:ident, ($run_default:expr, $version_default:expr, $allow_failure_default:expr)) => {
@@ -116,12 +119,28 @@ struct Metadata<'a> {
 }
 
 fn main() {
+    let app = clap::App::new("cargo-template-ci").arg(
+        clap::Arg::with_name("travis-config")
+            .long("travis-config")
+            .value_name("PATH")
+            .takes_value(true),
+    );
+    let matches = app.get_matches();
+
     let md = cargo_metadata::metadata(None).expect("Could not get cargo metadata");
     let pkg_metadata = md.packages[0].metadata.to_string();
     let config: Metadata<'_> = serde_json::from_str(&pkg_metadata).expect("Could not parse config");
 
-    println!("# {:?}", config.template_ci);
-    println!("{}", config.template_ci.render().unwrap());
+    // rewrite .travis.yml:
+    let dest = Path::new(matches.value_of("travis-config").unwrap_or(".travis.yml"));
+    let dest = dest.canonicalize().expect("could not canonicalize path");
+    let dest_dir = dest.parent().unwrap();
+    let output =
+        tempfile::NamedTempFile::new_in(dest_dir).expect("Could not create temporary file");
+
+    write!(&output, "# {:?}", config.template_ci).unwrap();
+    write!(&output, "{}\n", config.template_ci.render().unwrap()).unwrap();
+    output.persist(dest).unwrap();
 }
 
 #[cfg(test)]
