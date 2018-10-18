@@ -9,6 +9,8 @@ readme = "README.md"
 description = "Generate a CI configuration from a template and Cargo config"
 documentation = "https://docs.rs/cargo-template-ci"
 
+build = "build.rs"
+
 [badges]
 travis-ci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
 maintenance = { status = "passively-maintained" }
@@ -23,5 +25,13 @@ dev-version-ext = "dev"
 tag-prefix = "v"
 
 [dependencies]
+askama = "0.7.2"
+cargo_metadata = "0.6.0"
 failure = "0.1.1"
 failure_derive = "0.1.1"
+serde = "1.0.80"
+serde_derive = "1.0.80"
+serde_json = "1.0.32"
+
+[build-dependencies]
+askama = "0.7.2"
