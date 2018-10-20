@@ -31,7 +31,7 @@ matrix:
     - &bench_build
       rust: "{{bench.version}}"
       env:
-        - RUN_BENCHMARK=true
+        - RUN_BENCH=true
         - RUN_TEST=false
     {%- endif %}
     {%- if clippy.run %}
