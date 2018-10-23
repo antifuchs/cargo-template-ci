@@ -20,7 +20,7 @@ macro_rules! define_matrix_entry {
             run: bool,
             version: &'a str,
             allow_failure: bool,
-             // TODO: this needs to be shell-escaped!
+            // TODO: this needs to be shell-escaped!
             install_commandline: Option<String>,
             commandline: String,
         }
@@ -69,10 +69,21 @@ macro_rules! define_matrix_entry {
                 let raw: DeserializationStruct = DeserializationStruct::deserialize(deserializer)?;
                 let res = $name {
                     run: raw.run.or(DeserializationStruct::default().run).unwrap(),
-                    version: raw.version.or(DeserializationStruct::default().version).unwrap(),
-                    allow_failure: raw.allow_failure.or(DeserializationStruct::default().allow_failure).unwrap(),
-                    install_commandline: raw.install_commandline.or(DeserializationStruct::default().install_commandline),
-                    commandline: raw.commandline.or(DeserializationStruct::default().commandline).expect("Matrix entries need a commandline"),
+                    version: raw
+                        .version
+                        .or(DeserializationStruct::default().version)
+                        .unwrap(),
+                    allow_failure: raw
+                        .allow_failure
+                        .or(DeserializationStruct::default().allow_failure)
+                        .unwrap(),
+                    install_commandline: raw
+                        .install_commandline
+                        .or(DeserializationStruct::default().install_commandline),
+                    commandline: raw
+                        .commandline
+                        .or(DeserializationStruct::default().commandline)
+                        .expect("Matrix entries need a commandline"),
                 };
                 Ok(res)
             }
@@ -80,9 +91,23 @@ macro_rules! define_matrix_entry {
     };
 }
 
-define_matrix_entry!(BenchEntry, (false, "nightly", false, Some("cargo bench".to_owned())));
-define_matrix_entry!(ClippyEntry, (true, "nightly", false, Some("cargo clippy -- -D warnings".to_owned())));
-define_matrix_entry!(RustfmtEntry, (true, "stable", false, Some("cargo fmt".to_owned())));
+define_matrix_entry!(
+    BenchEntry,
+    (false, "nightly", false, Some("cargo bench".to_owned()))
+);
+define_matrix_entry!(
+    ClippyEntry,
+    (
+        true,
+        "nightly",
+        false,
+        Some("cargo clippy -- -D warnings".to_owned())
+    )
+);
+define_matrix_entry!(
+    RustfmtEntry,
+    (true, "stable", false, Some("cargo fmt".to_owned()))
+);
 
 define_matrix_entry!(CustomEntry, (false, "stable", false, None));
 
@@ -152,14 +177,20 @@ impl<'a> TemplateCIConfig<'a> {
     }
 
     fn has_any_matrix_entries(&self) -> bool {
-        self.bench.run || self.clippy.run || self.rustfmt.run ||
-            self.additional_matrix_entries.iter().any(|(_, r)| r.run)
+        self.bench.run
+            || self.clippy.run
+            || self.rustfmt.run
+            || self.additional_matrix_entries.iter().any(|(_, r)| r.run)
     }
 
     fn has_any_allowed_failures(&self) -> bool {
-        self.has_any_matrix_entries() &&
-            self.bench.allow_failure || self.clippy.allow_failure || self.rustfmt.allow_failure ||
-            self.additional_matrix_entries.iter().any(|(_, r)| r.allow_failure)
+        self.has_any_matrix_entries() && self.bench.allow_failure
+            || self.clippy.allow_failure
+            || self.rustfmt.allow_failure
+            || self
+                .additional_matrix_entries
+                .iter()
+                .any(|(_, r)| r.allow_failure)
     }
 }
 
