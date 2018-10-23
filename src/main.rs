@@ -130,6 +130,9 @@ struct TemplateCIConfig<'a> {
     #[serde(default)]
     additional_matrix_entries: HashMap<&'a str, CustomEntry<'a>>,
 
+    #[serde(default = "TemplateCIConfig::default_cache")]
+    cache: &'a str,
+
     #[serde(default = "TemplateCIConfig::default_os")]
     os: &'a str,
 
@@ -152,6 +155,7 @@ impl<'a> Default for TemplateCIConfig<'a> {
             rustfmt: Default::default(),
             additional_matrix_entries: Default::default(),
             dist: "xenial",
+            cache: "cargo",
             os: "linux",
             versions: vec!["stable", "beta", "nightly"],
             test_commandline: "cargo test --verbose --all".to_owned(),
@@ -160,6 +164,10 @@ impl<'a> Default for TemplateCIConfig<'a> {
 }
 
 impl<'a> TemplateCIConfig<'a> {
+    fn default_cache() -> &'a str {
+        Self::default().cache
+    }
+
     fn default_os() -> &'a str {
         Self::default().os
     }

@@ -4,7 +4,7 @@ dist: "{{dist}}"
 
 language: rust
 sudo: required
-cache: cargo
+cache: {{cache}}
 
 rust:
   - stable
