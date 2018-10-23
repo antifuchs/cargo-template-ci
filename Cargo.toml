@@ -29,8 +29,8 @@ allow_failure = false
 
 [package.metadata.template_ci.additional_matrix_entries.something_custom]
 name = "custom_templated_run"
-install_commandline="echo 'installing'"
-commandline="echo 'running custom tests'"
+install_commandline='echo "installing for custom tests"'
+commandline='echo "running custom tests"'
 
 [dependencies]
 askama = "0.7.2"

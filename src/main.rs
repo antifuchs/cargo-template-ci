@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+
 use askama::Template;
 use cargo_metadata;
 use serde::de::{Deserialize, Deserializer};
@@ -19,8 +20,9 @@ macro_rules! define_matrix_entry {
             run: bool,
             version: &'a str,
             allow_failure: bool,
-            install_commandline: Option<&'a str>,
-            commandline: &'a str,
+             // TODO: this needs to be shell-escaped!
+            install_commandline: Option<String>,
+            commandline: String,
         }
 
         impl<'a> Default for $name<'a> {
@@ -30,7 +32,7 @@ macro_rules! define_matrix_entry {
                     version: $version_default,
                     allow_failure: $allow_failure_default,
                     install_commandline: None,
-                    commandline: $commandline_default.unwrap_or("/bin/false"),
+                    commandline: $commandline_default.unwrap_or("/bin/false".to_owned()),
                 }
             }
         }
@@ -50,8 +52,8 @@ macro_rules! define_matrix_entry {
                     run: Option<bool>,
                     version: Option<&'a str>,
                     allow_failure: Option<bool>,
-                    install_commandline: Option<&'a str>,
-                    commandline: Option<&'a str>,
+                    install_commandline: Option<String>,
+                    commandline: Option<String>,
                 }
                 impl<'a> Default for DeserializationStruct<'a> {
                     fn default() -> Self {
@@ -78,9 +80,9 @@ macro_rules! define_matrix_entry {
     };
 }
 
-define_matrix_entry!(BenchEntry, (false, "nightly", false, Some("cargo bench")));
-define_matrix_entry!(ClippyEntry, (true, "nightly", false, Some("cargo clippy -- -D warnings")));
-define_matrix_entry!(RustfmtEntry, (true, "stable", false, Some("cargo fmt")));
+define_matrix_entry!(BenchEntry, (false, "nightly", false, Some("cargo bench".to_owned())));
+define_matrix_entry!(ClippyEntry, (true, "nightly", false, Some("cargo clippy -- -D warnings".to_owned())));
+define_matrix_entry!(RustfmtEntry, (true, "stable", false, Some("cargo fmt".to_owned())));
 
 define_matrix_entry!(CustomEntry, (false, "stable", false, None));
 
@@ -114,7 +116,7 @@ struct TemplateCIConfig<'a> {
     versions: Vec<&'a str>,
 
     #[serde(default = "TemplateCIConfig::default_test_commandline")]
-    test_commandline: &'a str,
+    test_commandline: String,
 }
 
 impl<'a> Default for TemplateCIConfig<'a> {
@@ -127,7 +129,7 @@ impl<'a> Default for TemplateCIConfig<'a> {
             dist: "xenial",
             os: "linux",
             versions: vec!["stable", "beta", "nightly"],
-            test_commandline: "cargo test --verbose --all"
+            test_commandline: "cargo test --verbose --all".to_owned(),
         }
     }
 }
@@ -145,7 +147,7 @@ impl<'a> TemplateCIConfig<'a> {
         Self::default().versions
     }
 
-    fn default_test_commandline() -> &'a str {
+    fn default_test_commandline() -> String {
         Self::default().test_commandline
     }
 

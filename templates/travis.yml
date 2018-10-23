@@ -79,7 +79,7 @@ before_script:
   {%- for c in additional_matrix_entries %}
   {%- if c.1.install_commandline.is_some() %}
   - bash -c 'if [[ "$RUN_{{c.0.to_ascii_uppercase()}}" == "true" ]]; then
-      {{c.1.install_commandline.unwrap()}}
+      {{c.1.install_commandline.as_ref().unwrap().as_str()}}
       ;
     fi'
   {%- endif %}
@@ -87,7 +87,7 @@ before_script:
 
 script:
   - bash -c 'if [[ "$RUN_TEST" == "true" ]]; then
-      {{test_commandline}}
+      {{test_commandline.as_str()}}
       ;
     fi'
   {%- if rustfmt.run %}
@@ -110,7 +110,7 @@ script:
   {%- endif %}
   {%- for c in additional_matrix_entries %}
   - bash -c 'if [[ "$RUN_{{c.0.to_ascii_uppercase()}}" == "true" ]]; then
-      {{c.1.commandline}}
+      {{c.1.commandline.as_str()}}
       ;
     fi'
   {%- endfor %}
