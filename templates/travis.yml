@@ -87,7 +87,7 @@ before_script:
 
 script:
   - bash -c 'if [[ "$RUN_TEST" == "true" ]]; then
-      cargo test
+      {{test_commandline}}
       ;
     fi'
   {%- if rustfmt.run %}

@@ -1,4 +1,4 @@
-# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", allow_failure: false, install_commandline: None, commandline: "cargo fmt" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", allow_failure: false, install_commandline: Some("echo \'installing\'"), commandline: "echo \'running custom tests\'" }}, os: "linux", dist: "xenial", versions: ["stable", "beta", "nightly"] }
+# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", allow_failure: false, install_commandline: None, commandline: "cargo fmt" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", allow_failure: false, install_commandline: Some("echo \'installing\'"), commandline: "echo \'running custom tests\'" }}, os: "linux", dist: "xenial", versions: ["stable", "beta", "nightly"], test_commandline: "cargo test --verbose --all" }
 os:
   - "linux"
 dist: "xenial"
@@ -56,7 +56,7 @@ before_script:
 
 script:
   - bash -c 'if [[ "$RUN_TEST" == "true" ]]; then
-      cargo test
+      cargo test --verbose --all
       ;
     fi'
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then

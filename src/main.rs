@@ -112,6 +112,9 @@ struct TemplateCIConfig<'a> {
     #[serde(default = "TemplateCIConfig::default_versions")]
     #[serde(borrow)]
     versions: Vec<&'a str>,
+
+    #[serde(default = "TemplateCIConfig::default_test_commandline")]
+    test_commandline: &'a str,
 }
 
 impl<'a> Default for TemplateCIConfig<'a> {
@@ -124,6 +127,7 @@ impl<'a> Default for TemplateCIConfig<'a> {
             dist: "xenial",
             os: "linux",
             versions: vec!["stable", "beta", "nightly"],
+            test_commandline: "cargo test --verbose --all"
         }
     }
 }
@@ -139,6 +143,10 @@ impl<'a> TemplateCIConfig<'a> {
 
     fn default_versions() -> Vec<&'a str> {
         Self::default().versions
+    }
+
+    fn default_test_commandline() -> &'a str {
+        Self::default().test_commandline
     }
 
     fn has_any_matrix_entries(&self) -> bool {
