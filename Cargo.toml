@@ -27,6 +27,11 @@ tag-prefix = "v"
 [package.metadata.template_ci.clippy]
 allow_failure = false
 
+[package.metadata.template_ci.additional_matrix_entries.something_custom]
+name = "custom_templated_run"
+install_commandline="echo 'installing'"
+commandline="echo 'running custom tests'"
+
 [dependencies]
 askama = "0.7.2"
 cargo_metadata = "0.6.0"

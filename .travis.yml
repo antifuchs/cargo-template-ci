@@ -1,4 +1,5 @@
-# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", allow_failure: false }, clippy: ClippyEntry { run: true, version: "nightly", allow_failure: false }, rustfmt: RustfmtEntry { run: true, version: "stable", allow_failure: false }, os: "linux", dist: "xenial", versions: ["stable", "beta", "nightly"] }os:
+# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", allow_failure: false, install_commandline: None, commandline: "cargo fmt" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", allow_failure: false, install_commandline: Some("echo \'installing\'"), commandline: "echo \'running custom tests\'" }}, os: "linux", dist: "xenial", versions: ["stable", "beta", "nightly"] }
+os:
   - "linux"
 dist: "xenial"
 
@@ -16,6 +17,7 @@ env:
     - RUN_TEST=true
     - RUN_CLIPPY=false
     - RUN_BENCH=false
+    - RUN_SOMETHING_CUSTOM=false
 
 matrix:
   fast_finish: true
@@ -30,6 +32,11 @@ matrix:
       env:
         - RUN_CLIPPY=true
         - RUN_TEST=false
+    - &something_custom
+      rust: "stable"
+      env:
+        - "RUN_TEST=false"
+        - "RUN_SOMETHING_CUSTOM=true"
   allow_failures: []
 
 before_script:
@@ -40,6 +47,10 @@ before_script:
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
       rm -f ~/.cargo/bin/clippy;
       rustup component add clippy-preview
+      ;
+    fi'
+  - bash -c 'if [[ "$RUN_SOMETHING_CUSTOM" == "true" ]]; then
+      echo 'installing'
       ;
     fi'
 
@@ -54,6 +65,10 @@ script:
     fi'
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
       cargo clippy -- -D warnings
+      ;
+    fi'
+  - bash -c 'if [[ "$RUN_SOMETHING_CUSTOM" == "true" ]]; then
+      echo 'running custom tests'
       ;
     fi'
 

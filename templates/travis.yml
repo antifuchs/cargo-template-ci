@@ -16,6 +16,9 @@ env:
     - RUN_TEST=true
     - RUN_CLIPPY=false
     - RUN_BENCH=false
+    {%- for c in additional_matrix_entries %}
+    - RUN_{{ c.0.to_ascii_uppercase() }}=false
+    {%- endfor %}
 
 matrix:
   fast_finish: true
@@ -41,7 +44,14 @@ matrix:
         - RUN_CLIPPY=true
         - RUN_TEST=false
     {%- endif %}
-  allow_failures: {% if !(bench.run && bench.allow_failure) && !(clippy.run && clippy.allow_failure) && !(rustfmt.run && rustfmt.allow_failure) %}[]{% endif %}
+    {%- for c in additional_matrix_entries %}
+    - &{{c.0}}
+      rust: "{{c.1.version}}"
+      env:
+        - "RUN_TEST=false"
+        - "RUN_{{c.0.to_ascii_uppercase()}}=true"
+    {%- endfor %}
+  allow_failures: {% if !self.has_any_allowed_failures() %}[]{% endif %}
     {%- if bench.run && bench.allow_failure %}
     - *bench_build
     {%- endif %}
@@ -66,6 +76,14 @@ before_script:
       ;
     fi'
   {%- endif %}
+  {%- for c in additional_matrix_entries %}
+  {%- if c.1.install_commandline.is_some() %}
+  - bash -c 'if [[ "$RUN_{{c.0.to_ascii_uppercase()}}" == "true" ]]; then
+      {{c.1.install_commandline.unwrap()}}
+      ;
+    fi'
+  {%- endif %}
+  {%- endfor %}
 
 script:
   - bash -c 'if [[ "$RUN_TEST" == "true" ]]; then
@@ -90,6 +108,12 @@ script:
       ;
     fi'
   {%- endif %}
+  {%- for c in additional_matrix_entries %}
+  - bash -c 'if [[ "$RUN_{{c.0.to_ascii_uppercase()}}" == "true" ]]; then
+      {{c.1.commandline}}
+      ;
+    fi'
+  {%- endfor %}
 
 branches:
   only:

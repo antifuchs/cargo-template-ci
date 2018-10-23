@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use askama::Template;
 use cargo_metadata;
 use serde::de::{Deserialize, Deserializer};
@@ -8,12 +9,18 @@ use std::path::Path;
 use tempfile;
 
 macro_rules! define_matrix_entry {
-    ($name:ident, ($run_default:expr, $version_default:expr, $allow_failure_default:expr)) => {
+    ($name:ident,
+     ($run_default:expr,
+      $version_default:expr,
+      $allow_failure_default:expr,
+      $commandline_default:expr)) => {
         #[derive(Debug)]
         struct $name<'a> {
             run: bool,
             version: &'a str,
             allow_failure: bool,
+            install_commandline: Option<&'a str>,
+            commandline: &'a str,
         }
 
         impl<'a> Default for $name<'a> {
@@ -22,6 +29,8 @@ macro_rules! define_matrix_entry {
                     run: $run_default,
                     version: $version_default,
                     allow_failure: $allow_failure_default,
+                    install_commandline: None,
+                    commandline: $commandline_default.unwrap_or("/bin/false"),
                 }
             }
         }
@@ -41,12 +50,27 @@ macro_rules! define_matrix_entry {
                     run: Option<bool>,
                     version: Option<&'a str>,
                     allow_failure: Option<bool>,
+                    install_commandline: Option<&'a str>,
+                    commandline: Option<&'a str>,
+                }
+                impl<'a> Default for DeserializationStruct<'a> {
+                    fn default() -> Self {
+                        DeserializationStruct {
+                            run: Some($run_default),
+                            version: Some($version_default),
+                            allow_failure: Some($allow_failure_default),
+                            install_commandline: None,
+                            commandline: $commandline_default,
+                        }
+                    }
                 }
                 let raw: DeserializationStruct = DeserializationStruct::deserialize(deserializer)?;
                 let res = $name {
-                    run: raw.run.unwrap_or(Self::default().run),
-                    version: raw.version.unwrap_or(Self::default().version),
-                    allow_failure: raw.allow_failure.unwrap_or(Self::default().allow_failure),
+                    run: raw.run.or(DeserializationStruct::default().run).unwrap(),
+                    version: raw.version.or(DeserializationStruct::default().version).unwrap(),
+                    allow_failure: raw.allow_failure.or(DeserializationStruct::default().allow_failure).unwrap(),
+                    install_commandline: raw.install_commandline.or(DeserializationStruct::default().install_commandline),
+                    commandline: raw.commandline.or(DeserializationStruct::default().commandline).expect("Matrix entries need a commandline"),
                 };
                 Ok(res)
             }
@@ -54,9 +78,11 @@ macro_rules! define_matrix_entry {
     };
 }
 
-define_matrix_entry!(BenchEntry, (false, "nightly", false));
-define_matrix_entry!(ClippyEntry, (true, "nightly", false));
-define_matrix_entry!(RustfmtEntry, (true, "stable", false));
+define_matrix_entry!(BenchEntry, (false, "nightly", false, Some("cargo bench")));
+define_matrix_entry!(ClippyEntry, (true, "nightly", false, Some("cargo clippy -- -D warnings")));
+define_matrix_entry!(RustfmtEntry, (true, "stable", false, Some("cargo fmt")));
+
+define_matrix_entry!(CustomEntry, (false, "stable", false, None));
 
 #[derive(Template, Debug, Deserialize)]
 #[template(path = "travis.yml")]
@@ -72,6 +98,10 @@ struct TemplateCIConfig<'a> {
     #[serde(borrow)]
     #[serde(default)]
     rustfmt: RustfmtEntry<'a>,
+
+    #[serde(borrow)]
+    #[serde(default)]
+    additional_matrix_entries: HashMap<&'a str, CustomEntry<'a>>,
 
     #[serde(default = "TemplateCIConfig::default_os")]
     os: &'a str,
@@ -90,6 +120,7 @@ impl<'a> Default for TemplateCIConfig<'a> {
             clippy: Default::default(),
             bench: Default::default(),
             rustfmt: Default::default(),
+            additional_matrix_entries: Default::default(),
             dist: "xenial",
             os: "linux",
             versions: vec!["stable", "beta", "nightly"],
@@ -108,6 +139,17 @@ impl<'a> TemplateCIConfig<'a> {
 
     fn default_versions() -> Vec<&'a str> {
         Self::default().versions
+    }
+
+    fn has_any_matrix_entries(&self) -> bool {
+        self.bench.run || self.clippy.run || self.rustfmt.run ||
+            self.additional_matrix_entries.iter().any(|(_, r)| r.run)
+    }
+
+    fn has_any_allowed_failures(&self) -> bool {
+        self.has_any_matrix_entries() &&
+            self.bench.allow_failure || self.clippy.allow_failure || self.rustfmt.allow_failure ||
+            self.additional_matrix_entries.iter().any(|(_, r)| r.allow_failure)
     }
 }
 
