@@ -33,36 +33,42 @@ jobs:
       - image: liuchong/rustup:{{conf.rustfmt.version}}
     steps:
       - checkout
+      {%- if conf.rustfmt.install_commandline.is_some() %}
       - run:
           name: Install
-          command: "rustup component add rustfmt"
+          command: {{conf.rustfmt.install_commandline.as_ref().unwrap().as_str()}}
+      {%- endif %}
       - run:
           name: Rustfmt
-          command: "cargo fmt -v -- --check"
+          command: {{conf.rustfmt.commandline.as_str()}}
 
   clippy:
     docker:
       - image: liuchong/rustup:{{conf.rustfmt.version}}
     steps:
       - checkout
+      {%- if conf.clippy.install_commandline.is_some() %}
       - run:
           name: Install
-          command: "rustup component add clippy"
+          command: {{conf.clippy.install_commandline.as_ref().unwrap().as_str()}}
+      {%- endif %}
       - run:
           name: Clippy
-          command: "cargo clippy -- -D warnings"
+          command: {{conf.clippy.commandline.as_str()}}
 
   bench:
     docker:
       - image: liuchong/rustup:{{conf.rustfmt.version}}
     steps:
       - checkout
+      {%- if conf.bench.install_commandline.is_some() %}
       - run:
           name: Install
-          command: "rustup component add clippy"
+          command: {{conf.bench.install_commandline.as_ref().unwrap().as_str()}}
+      {%- endif %}
       - run:
           name: Clippy
-          command: "cargo bench"
+          command: {{conf.bench.commandline.as_str()}}
 
 workflows:
   version: 2

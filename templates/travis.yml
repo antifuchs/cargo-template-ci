@@ -55,14 +55,13 @@ matrix:
 before_script:
   {%- if conf.rustfmt.run %}
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then
-      rustup component add rustfmt-preview
+      {{conf.rustfmt.install_commandline.as_ref().unwrap().as_str()}}
       ;
     fi'
   {%- endif %}
   {%- if conf.clippy.run %}
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
-      rm -f ~/.cargo/bin/clippy;
-      rustup component add clippy-preview
+      {{conf.clippy.install_commandline.as_ref().unwrap().as_str()}}
       ;
     fi'
   {%- endif %}
@@ -82,19 +81,19 @@ script:
     fi'
   {%- if conf.rustfmt.run %}
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then
-      cargo fmt -v -- --check
+      {{conf.rustfmt.commandline.as_str()}}
       ;
     fi'
   {%- endif %}
   {%- if conf.bench.run %}
   - bash -c 'if [[ "$RUN_BENCH" == "true" ]]; then
-      cargo bench
+      {{conf.bench.commandline.as_str()}}
       ;
     fi'
   {%- endif %}
   {%- if conf.clippy.run %}
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
-      cargo clippy -- -D warnings
+      {{conf.clippy.commandline.as_str()}}
       ;
     fi'
   {%- endif %}

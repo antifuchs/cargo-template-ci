@@ -15,6 +15,7 @@ macro_rules! define_matrix_entry {
     ($name:ident,
      ($run_default:expr,
       $version_default:expr,
+      $install_default:expr,
       $commandline_default:expr)) => {
         #[derive(Debug)]
         struct $name<'a> {
@@ -27,11 +28,12 @@ macro_rules! define_matrix_entry {
 
         impl<'a> Default for $name<'a> {
             fn default() -> Self {
+                let cmdline: Option<String> = $commandline_default.into();
                 $name {
                     run: $run_default,
                     version: $version_default,
-                    install_commandline: None,
-                    commandline: $commandline_default.unwrap_or("/bin/false".to_owned()),
+                    install_commandline: $commandline_default.into(),
+                    commandline: cmdline.unwrap_or("/bin/false".to_owned()),
                 }
             }
         }
@@ -58,8 +60,8 @@ macro_rules! define_matrix_entry {
                         DeserializationStruct {
                             run: Some($run_default),
                             version: Some($version_default),
-                            install_commandline: None,
-                            commandline: $commandline_default,
+                            install_commandline: $install_default.into(),
+                            commandline: $commandline_default.into(),
                         }
                     }
                 }
@@ -86,19 +88,28 @@ macro_rules! define_matrix_entry {
 
 define_matrix_entry!(
     BenchEntry,
-    (false, "nightly", Some("cargo bench".to_owned()))
+    (false, "nightly", None, "cargo bench".to_owned())
 );
 define_matrix_entry!(
     ClippyEntry,
     (
         true,
         "nightly",
-        Some("cargo clippy -- -D warnings".to_owned())
+        "rustup component add clippy".to_owned(),
+        "cargo clippy -- -D warnings".to_owned()
     )
 );
-define_matrix_entry!(RustfmtEntry, (true, "stable", Some("cargo fmt".to_owned())));
+define_matrix_entry!(
+    RustfmtEntry,
+    (
+        true,
+        "stable",
+        "rustup component add rustfmt".to_owned(),
+        "cargo fmt -v -- --check".to_owned()
+    )
+);
 
-define_matrix_entry!(CustomEntry, (false, "stable", None));
+define_matrix_entry!(CustomEntry, (false, "stable", None, None));
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct TemplateCIConfig<'a> {
