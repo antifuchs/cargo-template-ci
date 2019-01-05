@@ -7,6 +7,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Setup
+          command: rustup install stable
+      - run:
           name: Test
           command: cargo +stable test
 
@@ -15,6 +18,9 @@ jobs:
       - image: rust:latest
     steps:
       - checkout
+      - run:
+          name: Setup
+          command: rustup install nightly
       - run:
           name: Test
           command: cargo +nightly test
