@@ -15,6 +15,8 @@ jobs:
           command: "cargo test"
 
   prereq:
+    docker:
+      - image: scratch
     steps:
       - run: /usr/bin/true
 
