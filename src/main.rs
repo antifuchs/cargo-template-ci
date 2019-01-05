@@ -99,7 +99,7 @@ define_matrix_entry!(
     ClippyEntry,
     (
         true,
-        "nightly",
+        "stable",
         false,
         Some("cargo clippy -- -D warnings".to_owned())
     )
