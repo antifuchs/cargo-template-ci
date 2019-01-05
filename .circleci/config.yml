@@ -16,7 +16,7 @@ jobs:
   test-stable:
     docker:
       - image: rust:latest
-    steps: <<:test_steps
+    steps: *test_steps
     environment:
       RUST_VERSION: stable
 
