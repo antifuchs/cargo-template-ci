@@ -253,7 +253,7 @@ fn main() {
         GenerateCommand::TravisCI { config_path } => {
             TravisCI::from(config.template_ci)
                 .render_into_config_file(PathBuf::from(
-                    config_path.unwrap_or(".travis.yml".to_string()),
+                    config_path.unwrap_or_else(|| ".travis.yml".to_string()),
                 ))
                 .expect("Failed to generate travis config");
         }
