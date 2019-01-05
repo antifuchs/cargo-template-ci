@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 
-use askama::Template;
 use cargo_metadata;
 use serde::de::{Deserialize, Deserializer};
 use serde_derive::Deserialize;
 use serde_json;
-use std::io::Write;
-use std::path::Path;
-use tempfile;
+use std::path::PathBuf;
+
+mod ci;
+
+use crate::ci::{travis::TravisCI, CISystem};
 
 macro_rules! define_matrix_entry {
     ($name:ident,
@@ -111,9 +112,8 @@ define_matrix_entry!(
 
 define_matrix_entry!(CustomEntry, (false, "stable", false, None));
 
-#[derive(Template, Debug, Deserialize)]
-#[template(path = "travis.yml")]
-struct TemplateCIConfig<'a> {
+#[derive(Debug, Deserialize)]
+pub(crate) struct TemplateCIConfig<'a> {
     #[serde(borrow)]
     #[serde(default)]
     bench: BenchEntry<'a>,
@@ -211,12 +211,14 @@ struct Metadata<'a> {
 
 fn main() {
     let app = clap::App::new("cargo-template-ci").subcommand(
-        clap::SubCommand::with_name("template-ci").arg(
-            clap::Arg::with_name("travis-config")
-                .long("travis-config")
-                .value_name("PATH")
-                .takes_value(true),
-        ),
+        clap::SubCommand::with_name("template-ci")
+            .arg(
+                clap::Arg::with_name("travis-config")
+                    .long("travis-config")
+                    .value_name("PATH")
+                    .takes_value(true),
+            )
+            .arg(clap::Arg::with_name("travis").long("travis")),
     );
     let matches = app.get_matches();
 
@@ -224,16 +226,12 @@ fn main() {
     let pkg_metadata = md.packages[0].metadata.to_string();
     let config: Metadata<'_> = serde_json::from_str(&pkg_metadata).expect("Could not parse config");
 
-    // rewrite .travis.yml:
-    let dest = Path::new(matches.value_of("travis-config").unwrap_or(".travis.yml"));
-    let dest = dest.canonicalize().expect("could not canonicalize path");
-    let dest_dir = dest.parent().unwrap();
-    let output =
-        tempfile::NamedTempFile::new_in(dest_dir).expect("Could not create temporary file");
-
-    writeln!(&output, "# {:?}", config.template_ci).unwrap();
-    writeln!(&output, "{}", config.template_ci.render().unwrap()).unwrap();
-    output.persist(dest).unwrap();
+    if matches.is_present("travis") {
+        let out_path = matches.value_of("travis-config").map(|c| PathBuf::from(c));
+        TravisCI::from(config.template_ci)
+            .render_into_config_file(out_path)
+            .expect("Failed to generate travis config");
+    }
 }
 
 #[cfg(test)]
