@@ -5,6 +5,7 @@ use serde::de::{Deserialize, Deserializer};
 use serde_derive::Deserialize;
 use serde_json;
 use std::path::PathBuf;
+use structopt::StructOpt;
 
 mod ci;
 
@@ -209,28 +210,46 @@ struct Metadata<'a> {
     template_ci: TemplateCIConfig<'a>,
 }
 
+#[derive(StructOpt, Debug)]
+#[structopt(
+    name = "cargo-template-ci",
+    about = "Generate a reasonable CI config file from Cargo.toml"
+)]
+enum Args {
+    #[structopt(name = "template-ci")]
+    TemplateCI {
+        #[structopt(subcommand)]
+        cmd: GenerateCommand,
+    },
+}
+
+#[derive(StructOpt, Debug)]
+enum GenerateCommand {
+    #[structopt(name = "travis")]
+    TravisCI {
+        #[structopt(
+            long = "travis-config",
+            help = "Path to travis CI yaml config",
+            default_value = ".travis.yml"
+        )]
+        config_path: String,
+    },
+}
+
 fn main() {
-    let app = clap::App::new("cargo-template-ci").subcommand(
-        clap::SubCommand::with_name("template-ci")
-            .arg(
-                clap::Arg::with_name("travis-config")
-                    .long("travis-config")
-                    .value_name("PATH")
-                    .takes_value(true),
-            )
-            .arg(clap::Arg::with_name("travis").long("travis")),
-    );
-    let matches = app.get_matches();
+    let opts = Args::from_args();
 
     let md = cargo_metadata::metadata(None).expect("Could not get cargo metadata");
     let pkg_metadata = md.packages[0].metadata.to_string();
     let config: Metadata<'_> = serde_json::from_str(&pkg_metadata).expect("Could not parse config");
 
-    if matches.is_present("travis") {
-        let out_path = matches.value_of("travis-config").map(|c| PathBuf::from(c));
-        TravisCI::from(config.template_ci)
-            .render_into_config_file(out_path)
-            .expect("Failed to generate travis config");
+    let Args::TemplateCI { cmd: tci } = opts;
+    match tci {
+        GenerateCommand::TravisCI { config_path } => {
+            TravisCI::from(config.template_ci)
+                .render_into_config_file(PathBuf::from(config_path))
+                .expect("Failed to generate travis config");
+        }
     }
 }
 

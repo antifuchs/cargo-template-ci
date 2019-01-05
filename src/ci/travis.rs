@@ -18,8 +18,6 @@ impl<'a> From<TemplateCIConfig<'a>> for TravisCI<'a> {
 }
 
 impl<'a> CISystem<'a> for TravisCI<'a> {
-    const FILENAME: &'static str = ".travis.ci";
-
     fn write_preamble(&self, mut output: impl io::Write) -> Result<(), super::Error> {
         writeln!(&mut output, "# {:?}", self.conf)?;
         Ok(())

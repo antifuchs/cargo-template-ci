@@ -14,16 +14,12 @@ custom_error! {pub Error
 }
 
 pub(crate) trait CISystem<'a>: askama::Template {
-    /// The default pathname for the CI system's configuration file
-    const FILENAME: &'static str;
-
     /// Writes any comments / preamble / debug data to the CI config file.
     fn write_preamble(&self, output: impl io::Write) -> Result<(), Error>;
 
     /// Renders the CI system template and writes it to either the
     /// given config file or to the default location.
-    fn render_into_config_file(&self, destination: Option<PathBuf>) -> Result<(), Error> {
-        let destination = destination.unwrap_or(Self::FILENAME.into());
+    fn render_into_config_file(&self, destination: PathBuf) -> Result<(), Error> {
         let dest = destination.as_path();
         // TODO: canonicalization fails if the file does not exist:
         let dest = dest.canonicalize()?;
