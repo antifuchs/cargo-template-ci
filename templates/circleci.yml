@@ -1,4 +1,3 @@
-# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "nightly", allow_failure: false, install_commandline: None, commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", allow_failure: false, install_commandline: None, commandline: "cargo fmt" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", allow_failure: false, install_commandline: Some("echo \"installing for custom tests\""), commandline: "echo \"running custom tests\"" }}, cache: "cargo", os: "linux", dist: "xenial", versions: ["stable", "beta", "nightly"], test_commandline: "cargo test --verbose --all" }
 version: 2
 
 jobs:
@@ -31,7 +30,7 @@ jobs:
 
   rustfmt:
     docker:
-      - image: liuchong/rustup:stable
+      - image: liuchong/rustup:{{conf.rustfmt.version}}
     steps:
       - checkout
       - run:
@@ -43,7 +42,7 @@ jobs:
 
   clippy:
     docker:
-      - image: liuchong/rustup:stable
+      - image: liuchong/rustup:{{conf.rustfmt.version}}
     steps:
       - checkout
       - run:
@@ -55,7 +54,7 @@ jobs:
 
   bench:
     docker:
-      - image: liuchong/rustup:stable
+      - image: liuchong/rustup:{{conf.rustfmt.version}}
     steps:
       - checkout
       - run:
@@ -69,8 +68,15 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - test-stable
-      - test-beta
-      - test-nightly
+      {%- for version in conf.versions %}
+      - test-{{version}}
+      {%- endfor %}
+      {%- if conf.rustfmt.run %}
       - rustfmt
+      {%- endif %}
+      {%- if conf.clippy.run %}
       - clippy
+      {%- endif %}
+      {%- if conf.bench.run %}
+      - bench
+      {%- endif %}

@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 use custom_error::custom_error;
 
+pub(crate) mod circleci;
 pub(crate) mod travis;
 
 custom_error! {pub Error

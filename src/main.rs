@@ -9,7 +9,7 @@ use structopt::StructOpt;
 
 mod ci;
 
-use crate::ci::{travis::TravisCI, CISystem};
+use crate::ci::{circleci::CircleCI, travis::TravisCI, CISystem};
 
 macro_rules! define_matrix_entry {
     ($name:ident,
@@ -230,6 +230,9 @@ enum GenerateCommand {
         #[structopt(long = "travis-config", help = "Path to travis CI yaml config")]
         config_path: Option<String>,
     },
+
+    #[structopt(name = "circleci", about = "Generate circleci configuration")]
+    CircleCI,
 }
 
 impl Default for GenerateCommand {
@@ -252,6 +255,11 @@ fn main() {
                 .render_into_config_file(PathBuf::from(
                     config_path.unwrap_or(".travis.yml".to_string()),
                 ))
+                .expect("Failed to generate travis config");
+        }
+        GenerateCommand::CircleCI => {
+            CircleCI::from(config.template_ci)
+                .render_into_config_file(PathBuf::from(".circleci/config.yml"))
                 .expect("Failed to generate travis config");
         }
     }
