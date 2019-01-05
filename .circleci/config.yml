@@ -8,16 +8,16 @@ jobs:
       - checkout
       - run:
           name: Test
-          command: cargo test
+          command: cargo +stable test
 
   test-nightly:
     docker:
-      - image: rustlang/rust:nightly
+      - image: rust:latest
     steps:
       - checkout
       - run:
           name: Test
-          command: cargo test
+          command: cargo +nightly test
 
 workflows:
   version: 2
