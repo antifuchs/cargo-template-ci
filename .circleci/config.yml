@@ -16,7 +16,7 @@ jobs:
 
   prereq:
     docker:
-      - image: scratch
+      - image: alpine:latest
     steps:
       - run: /usr/bin/true
 
