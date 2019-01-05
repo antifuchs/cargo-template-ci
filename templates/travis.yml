@@ -7,9 +7,9 @@ sudo: required
 cache: {{conf.cache}}
 
 rust:
-  - stable
-  - beta
-  - nightly
+  {%- for version in conf.versions %}
+  - {{version}}
+  {%- endfor %}
 
 env:
   global:
