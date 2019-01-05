@@ -3,29 +3,30 @@ version: 2
 jobs:
   test-base:
     docker:
-      - image: rust:latest
+      - image: liuchong/rustup:stable
     steps: &test_steps
       - checkout
       - run:
-          name: Setup
-          command: "rustup install ${RUST_VERSION}"
+          name: Debug info
+          command: "rustc --version"
       - run:
           name: Test
-          command: "cargo +${RUST_VERSION} test"
+          command: "cargo test"
 
   test-stable:
     docker:
-      - image: rust:latest
+      - image: liuchong/rustup:stable
     steps: *test_steps
-    environment:
-      RUST_VERSION: stable
 
   test-nightly:
     docker:
-      - image: rust:latest
+      - image: liuchong/rustup:nightly
     steps: *test_steps
-    environment:
-      RUST_VERSION: nightly
+
+  rustfmt:
+    docker:
+      - image: rust:latest
+    steps:
 
 workflows:
   version: 2
