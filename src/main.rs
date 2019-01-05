@@ -145,7 +145,7 @@ impl<'a> Default for TemplateCIConfig<'a> {
             dist: "xenial",
             cache: "cargo",
             os: "linux",
-            versions: vec!["stable", "beta", "nightly"],
+            versions: vec!["stable", "nightly"],
             test_commandline: "cargo test --verbose --all".to_owned(),
         }
     }
