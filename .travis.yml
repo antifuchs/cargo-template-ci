@@ -74,6 +74,8 @@ branches:
     # release tags
     - /^v\d+\.\d+\.\d+.*$/
     - master
+    - trying
+    - staging
 
 notifications:
   email:
