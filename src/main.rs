@@ -215,39 +215,43 @@ struct Metadata<'a> {
     name = "cargo-template-ci",
     about = "Generate a reasonable CI config file from Cargo.toml"
 )]
-enum Args {
+enum Cmdline {
     #[structopt(name = "template-ci")]
     TemplateCI {
         #[structopt(subcommand)]
-        cmd: GenerateCommand,
+        cmd: Option<GenerateCommand>,
     },
 }
 
 #[derive(StructOpt, Debug)]
 enum GenerateCommand {
-    #[structopt(name = "travis")]
+    #[structopt(name = "travis", about = "Generate travis-ci configuration")]
     TravisCI {
-        #[structopt(
-            long = "travis-config",
-            help = "Path to travis CI yaml config",
-            default_value = ".travis.yml"
-        )]
-        config_path: String,
+        #[structopt(long = "travis-config", help = "Path to travis CI yaml config")]
+        config_path: Option<String>,
     },
 }
 
+impl Default for GenerateCommand {
+    fn default() -> Self {
+        GenerateCommand::TravisCI { config_path: None }
+    }
+}
+
 fn main() {
-    let opts = Args::from_args();
+    let opts = Cmdline::from_args();
 
     let md = cargo_metadata::metadata(None).expect("Could not get cargo metadata");
     let pkg_metadata = md.packages[0].metadata.to_string();
     let config: Metadata<'_> = serde_json::from_str(&pkg_metadata).expect("Could not parse config");
 
-    let Args::TemplateCI { cmd: tci } = opts;
-    match tci {
+    let Cmdline::TemplateCI { cmd } = opts;
+    match cmd.unwrap_or_default() {
         GenerateCommand::TravisCI { config_path } => {
             TravisCI::from(config.template_ci)
-                .render_into_config_file(PathBuf::from(config_path))
+                .render_into_config_file(PathBuf::from(
+                    config_path.unwrap_or(".travis.yml".to_string()),
+                ))
                 .expect("Failed to generate travis config");
         }
     }
