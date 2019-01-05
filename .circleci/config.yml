@@ -3,7 +3,7 @@ version: 2
 jobs:
   test-stable:
     docker:
-      - image: rust:stable
+      - image: rust:latest
     steps:
       - checkout
       - run:
