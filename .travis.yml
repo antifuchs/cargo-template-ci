@@ -1,4 +1,4 @@
-# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", install_commandline: Some("cargo bench"), commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "nightly", install_commandline: Some("rustup component add clippy"), commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", install_commandline: Some("cargo fmt -v -- --check"), commandline: "cargo fmt -v -- --check" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", install_commandline: Some("echo \"installing for custom tests\""), commandline: "echo \"running custom tests\"" }}, cache: "cargo", os: "linux", dist: "xenial", versions: ["stable", "nightly"], test_commandline: "cargo test --verbose --all" }
+# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", install_commandline: None, commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "stable", install_commandline: Some("rustup component add clippy"), commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", install_commandline: Some("rustup component add rustfmt"), commandline: "cargo fmt -v -- --check" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", install_commandline: Some("echo \"installing for custom tests\""), commandline: "echo \"running custom tests\"" }}, cache: "cargo", os: "linux", dist: "xenial", versions: ["stable", "nightly"], test_commandline: "cargo test --verbose --all" }
 os:
   - "linux"
 dist: "xenial"
@@ -27,7 +27,7 @@ matrix:
         - RUN_RUSTFMT=true
         - RUN_TEST=false
     - &clippy_build
-      rust: "nightly"
+      rust: "stable"
       env:
         - RUN_CLIPPY=true
         - RUN_TEST=false
@@ -39,7 +39,7 @@ matrix:
 
 before_script:
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then
-      cargo fmt -v -- --check
+      rustup component add rustfmt
       ;
     fi'
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then

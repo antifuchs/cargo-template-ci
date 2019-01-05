@@ -1,4 +1,4 @@
-# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", install_commandline: Some("cargo bench"), commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "nightly", install_commandline: Some("rustup component add clippy"), commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", install_commandline: Some("cargo fmt -v -- --check"), commandline: "cargo fmt -v -- --check" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", install_commandline: Some("echo \"installing for custom tests\""), commandline: "echo \"running custom tests\"" }}, cache: "cargo", os: "linux", dist: "xenial", versions: ["stable", "nightly"], test_commandline: "cargo test --verbose --all" }
+# TemplateCIConfig { bench: BenchEntry { run: false, version: "nightly", install_commandline: None, commandline: "cargo bench" }, clippy: ClippyEntry { run: true, version: "stable", install_commandline: Some("rustup component add clippy"), commandline: "cargo clippy -- -D warnings" }, rustfmt: RustfmtEntry { run: true, version: "stable", install_commandline: Some("rustup component add rustfmt"), commandline: "cargo fmt -v -- --check" }, additional_matrix_entries: {"something_custom": CustomEntry { run: false, version: "stable", install_commandline: Some("echo \"installing for custom tests\""), commandline: "echo \"running custom tests\"" }}, cache: "cargo", os: "linux", dist: "xenial", versions: ["stable", "nightly"], test_commandline: "cargo test --verbose --all" }
 version: 2
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
       - checkout
       - run:
           name: Install
-          command: cargo fmt -v -- --check
+          command: rustup component add rustfmt
       - run:
           name: Rustfmt
           command: cargo fmt -v -- --check
@@ -55,14 +55,11 @@ jobs:
 
   bench:
     docker:
-      - image: liuchong/rustup:stable
+      - image: liuchong/rustup:nightly
     steps:
       - checkout
       - run:
-          name: Install
-          command: cargo bench
-      - run:
-          name: Clippy
+          name: Bench
           command: cargo bench
 
 workflows:

@@ -32,7 +32,7 @@ macro_rules! define_matrix_entry {
                 $name {
                     run: $run_default,
                     version: $version_default,
-                    install_commandline: $commandline_default.into(),
+                    install_commandline: $install_default.into(),
                     commandline: cmdline.unwrap_or("/bin/false".to_owned()),
                 }
             }
@@ -94,7 +94,7 @@ define_matrix_entry!(
     ClippyEntry,
     (
         true,
-        "nightly",
+        "stable",
         "rustup component add clippy".to_owned(),
         "cargo clippy -- -D warnings".to_owned()
     )

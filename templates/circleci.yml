@@ -44,7 +44,7 @@ jobs:
 
   clippy:
     docker:
-      - image: liuchong/rustup:{{conf.rustfmt.version}}
+      - image: liuchong/rustup:{{conf.clippy.version}}
     steps:
       - checkout
       {%- if conf.clippy.install_commandline.is_some() %}
@@ -58,7 +58,7 @@ jobs:
 
   bench:
     docker:
-      - image: liuchong/rustup:{{conf.rustfmt.version}}
+      - image: liuchong/rustup:{{conf.bench.version}}
     steps:
       - checkout
       {%- if conf.bench.install_commandline.is_some() %}
@@ -67,7 +67,7 @@ jobs:
           command: {{conf.bench.install_commandline.as_ref().unwrap().as_str()}}
       {%- endif %}
       - run:
-          name: Clippy
+          name: Bench
           command: {{conf.bench.commandline.as_str()}}
 
 workflows:
