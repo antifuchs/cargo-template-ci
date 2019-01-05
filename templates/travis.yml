@@ -119,8 +119,9 @@ branches:
   only:
     # release tags
     - /^v\d+\.\d+\.\d+.*$/
-    - master
-
+    {%- for branch in branches %}
+    - {{branch}}
+    {%- endfor %}
 notifications:
   email:
     on_success: never
