@@ -33,6 +33,9 @@ name = "custom_templated_run"
 install_commandline='echo "installing for custom tests"'
 commandline='echo "running custom tests"'
 
+[package.metadata.template_ci]
+branches = ["master", "trying", "staging"]
+
 [dependencies]
 askama = "0.7.2"
 cargo_metadata = "0.6.0"
