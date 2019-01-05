@@ -29,8 +29,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install
-          command: "rustup component add rustfmt"
+          name: "rustup install"
+          commnad: "rustup install stable && rustup component add rustfmt"
       - run:
           name: Rustfmt
           command: "cargo fmt -- --check"
@@ -42,7 +42,7 @@ jobs:
       - checkout
       - run:
           name: Install
-          command: "rustup component add clippy"
+          command: "rustup install stable && rustup component add clippy"
       - run:
           name: Clippy
           command: "cargo clippy"
