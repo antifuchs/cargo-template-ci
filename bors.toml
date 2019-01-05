@@ -1,6 +1,6 @@
 # Don't forget to update permissions and add this repo in
 # https://app.bors.tech/repositories so bors can see the new repo!
 
-status = [
-  "continuous-integration/travis-ci/push",
+ status = [
+  "build_and_test",
 ]
