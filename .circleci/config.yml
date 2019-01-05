@@ -33,7 +33,7 @@ jobs:
           command: "rustup component add rustfmt"
       - run:
           name: Rustfmt
-          command: "cargo fmt -- --check"
+          command: "cargo fmt -v -- --check"
 
   clippy:
     docker:
@@ -45,7 +45,7 @@ jobs:
           command: "rustup component add clippy"
       - run:
           name: Clippy
-          command: "cargo clippy"
+          command: "cargo clippy -D warnings"
 
 workflows:
   version: 2
