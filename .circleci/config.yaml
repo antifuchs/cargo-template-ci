@@ -1,0 +1,20 @@
+version: 2
+
+jobs:
+  test-stable:
+    docker:
+      - image: rust:stable
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: cargo test
+
+  test-nightly:
+    docker:
+      - image: rustlang/rust:nightly
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: cargo test
