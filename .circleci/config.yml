@@ -25,8 +25,27 @@ jobs:
 
   rustfmt:
     docker:
-      - image: rust:latest
+      - image: liuchong/rustup:stable
     steps:
+      - checkout
+      - run:
+          name: Install
+          command: "rustup component add rustfmt"
+      - run:
+          name: Rustfmt
+          command: "cargo fmt"
+
+  clippy:
+    docker:
+      - image: liuchong/rustup:stable
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: "rustup component add clippy"
+      - run:
+          name: Clippy
+          command: "cargo clippy"
 
 workflows:
   version: 2
@@ -34,3 +53,5 @@ workflows:
     jobs:
       - test-stable
       - test-nightly
+      - rustfmt
+      - clippy
