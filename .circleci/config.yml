@@ -1,29 +1,31 @@
 version: 2
 
 jobs:
-  test-stable:
+  test-base:
     docker:
       - image: rust:latest
-    steps:
+    steps: &test_steps
       - checkout
       - run:
           name: Setup
-          command: rustup install stable
+          command: "rustup install ${RUST_VERSION}"
       - run:
           name: Test
-          command: cargo +stable test
+          command: "cargo +${RUST_VERSION} test"
+
+  test-stable:
+    docker:
+      - image: rust:latest
+    steps: <<:test_steps
+    environment:
+      RUST_VERSION: stable
 
   test-nightly:
     docker:
       - image: rust:latest
-    steps:
-      - checkout
-      - run:
-          name: Setup
-          command: rustup install nightly
-      - run:
-          name: Test
-          command: cargo +nightly test
+    steps: <<:test_steps
+    environment:
+      RUST_VERSION: nightly
 
 workflows:
   version: 2
