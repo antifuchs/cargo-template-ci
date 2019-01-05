@@ -15,13 +15,11 @@ macro_rules! define_matrix_entry {
     ($name:ident,
      ($run_default:expr,
       $version_default:expr,
-      $allow_failure_default:expr,
       $commandline_default:expr)) => {
         #[derive(Debug)]
         struct $name<'a> {
             run: bool,
             version: &'a str,
-            allow_failure: bool,
             // TODO: this needs to be shell-escaped!
             install_commandline: Option<String>,
             commandline: String,
@@ -32,7 +30,6 @@ macro_rules! define_matrix_entry {
                 $name {
                     run: $run_default,
                     version: $version_default,
-                    allow_failure: $allow_failure_default,
                     install_commandline: None,
                     commandline: $commandline_default.unwrap_or("/bin/false".to_owned()),
                 }
@@ -53,7 +50,6 @@ macro_rules! define_matrix_entry {
                 struct DeserializationStruct<'a> {
                     run: Option<bool>,
                     version: Option<&'a str>,
-                    allow_failure: Option<bool>,
                     install_commandline: Option<String>,
                     commandline: Option<String>,
                 }
@@ -62,7 +58,6 @@ macro_rules! define_matrix_entry {
                         DeserializationStruct {
                             run: Some($run_default),
                             version: Some($version_default),
-                            allow_failure: Some($allow_failure_default),
                             install_commandline: None,
                             commandline: $commandline_default,
                         }
@@ -74,10 +69,6 @@ macro_rules! define_matrix_entry {
                     version: raw
                         .version
                         .or(DeserializationStruct::default().version)
-                        .unwrap(),
-                    allow_failure: raw
-                        .allow_failure
-                        .or(DeserializationStruct::default().allow_failure)
                         .unwrap(),
                     install_commandline: raw
                         .install_commandline
@@ -95,23 +86,19 @@ macro_rules! define_matrix_entry {
 
 define_matrix_entry!(
     BenchEntry,
-    (false, "nightly", false, Some("cargo bench".to_owned()))
+    (false, "nightly", Some("cargo bench".to_owned()))
 );
 define_matrix_entry!(
     ClippyEntry,
     (
         true,
         "nightly",
-        false,
         Some("cargo clippy -- -D warnings".to_owned())
     )
 );
-define_matrix_entry!(
-    RustfmtEntry,
-    (true, "stable", false, Some("cargo fmt".to_owned()))
-);
+define_matrix_entry!(RustfmtEntry, (true, "stable", Some("cargo fmt".to_owned())));
 
-define_matrix_entry!(CustomEntry, (false, "stable", false, None));
+define_matrix_entry!(CustomEntry, (false, "stable", None));
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct TemplateCIConfig<'a> {
@@ -183,23 +170,6 @@ impl<'a> TemplateCIConfig<'a> {
 
     fn default_test_commandline() -> String {
         Self::default().test_commandline
-    }
-
-    fn has_any_matrix_entries(&self) -> bool {
-        self.bench.run
-            || self.clippy.run
-            || self.rustfmt.run
-            || self.additional_matrix_entries.iter().any(|(_, r)| r.run)
-    }
-
-    fn has_any_allowed_failures(&self) -> bool {
-        self.has_any_matrix_entries() && self.bench.allow_failure
-            || self.clippy.allow_failure
-            || self.rustfmt.allow_failure
-            || self
-                .additional_matrix_entries
-                .iter()
-                .any(|(_, r)| r.allow_failure)
     }
 }
 

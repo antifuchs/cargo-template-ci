@@ -51,16 +51,6 @@ matrix:
         - "RUN_TEST=false"
         - "RUN_{{c.0.to_ascii_uppercase()}}=true"
     {%- endfor %}
-  allow_failures: {% if !conf.has_any_allowed_failures() %}[]{% endif %}
-    {%- if conf.bench.run && conf.bench.allow_failure %}
-    - *bench_build
-    {%- endif %}
-    {%- if conf.clippy.run && conf.clippy.allow_failure %}
-    - *clippy_build
-    {%- endif %}
-    {%- if conf.rustfmt.run && conf.rustfmt.allow_failure %}
-    - *rustfmt_build
-    {%- endif %}
 
 before_script:
   {%- if conf.rustfmt.run %}
