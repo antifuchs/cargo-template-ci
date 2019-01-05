@@ -33,7 +33,7 @@ jobs:
           command: "rustup component add rustfmt"
       - run:
           name: Rustfmt
-          command: "cargo fmt"
+          command: "cargo fmt -- --check"
 
   clippy:
     docker:
