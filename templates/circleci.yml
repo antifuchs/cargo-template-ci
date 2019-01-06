@@ -78,6 +78,14 @@ jobs:
           name: Bench
           command: {{conf.bench.commandline.as_str()}}
 
+  ci_success:
+    docker:
+      image: alpine:latest
+    steps:
+      - run:
+          name: Success
+          command: "echo yay"
+
 workflows:
   version: 2
   continuous_integration:
@@ -98,3 +106,17 @@ workflows:
       - bench:
           filters: {{filters|json}}
       {%- endif %}
+      - ci_success:
+          requires:
+          {%- for version in conf.versions %}
+          - test-{{version}}
+          {%- endfor %}
+          {%- if conf.rustfmt.run %}
+          - rustfmt
+          {%- endif %}
+          {%- if conf.clippy.run %}
+          - clippy
+          {%- endif %}
+          {%- if conf.bench.run %}
+          - bench
+          {%- endif %}
