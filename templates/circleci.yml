@@ -96,6 +96,7 @@ workflows:
     jobs:
       {%- for version in conf.versions %}
       - test:
+          name: test-{{version}}
           version: {{version}}
           filters: {{filters|json}}
       {%- endfor %}
@@ -117,8 +118,7 @@ workflows:
       - ci_success:
           requires:
           {%- for version in conf.versions %}
-          - test:
-              version: {{version}}
+          - test-{{version}}
           {%- endfor %}
           {%- if conf.rustfmt.run %}
           - rustfmt

@@ -87,6 +87,7 @@ workflows:
   continuous_integration:
     jobs:
       - test:
+          name: test-stable
           version: stable
           filters: {
   "branches": {
@@ -101,6 +102,7 @@ workflows:
   }
 }
       - test:
+          name: test-nightly
           version: nightly
           filters: {
   "branches": {
@@ -144,9 +146,7 @@ workflows:
 }
       - ci_success:
           requires:
-          - test:
-              version: stable
-          - test:
-              version: nightly
+          - test-stable
+          - test-nightly
           - rustfmt
           - clippy
