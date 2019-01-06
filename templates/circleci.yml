@@ -87,7 +87,6 @@ jobs:
           command: "echo yay"
 
 workflows:
-  version: 2
   continuous_integration:
     jobs:
       {%- for version in conf.versions %}

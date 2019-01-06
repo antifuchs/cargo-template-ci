@@ -79,7 +79,6 @@ jobs:
           command: "echo yay"
 
 workflows:
-  version: 2
   continuous_integration:
     jobs:
       - test-stable:
