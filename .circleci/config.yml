@@ -70,6 +70,14 @@ jobs:
           name: Bench
           command: cargo bench
 
+  ci_success:
+    docker:
+      image: alpine:latest
+    steps:
+      - run:
+          name: Success
+          command: "echo yay"
+
 workflows:
   version: 2
   continuous_integration:
@@ -126,3 +134,9 @@ workflows:
     ]
   }
 }
+      - ci_success:
+          requires:
+          - test-stable
+          - test-nightly
+          - rustfmt
+          - clippy
