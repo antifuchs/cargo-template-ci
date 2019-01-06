@@ -42,14 +42,14 @@ jobs:
     executor: << parameters.version >>
     steps:
       - checkout
-      {%- if conf.rustfmt.install_commandline.is_some() %}
+      {%- if conf.rustfmt.install_commandline().is_some() %}
       - run:
           name: Install
-          command: {{conf.rustfmt.install_commandline.as_ref().unwrap().as_str()}}
+          command: {{conf.rustfmt.install_commandline().unwrap()}}
       {%- endif %}
       - run:
           name: Rustfmt
-          command: {{conf.rustfmt.commandline.as_str()}}
+          command: {{conf.rustfmt.commandline()}}
 
   clippy:
     parameters:
@@ -58,14 +58,14 @@ jobs:
     executor: << parameters.version >>
     steps:
       - checkout
-      {%- if conf.clippy.install_commandline.is_some() %}
+      {%- if conf.clippy.install_commandline().is_some() %}
       - run:
           name: Install
-          command: {{conf.clippy.install_commandline.as_ref().unwrap().as_str()}}
+          command: {{conf.clippy.install_commandline().unwrap()}}
       {%- endif %}
       - run:
           name: Clippy
-          command: {{conf.clippy.commandline.as_str()}}
+          command: {{conf.clippy.commandline()}}
 
   bench:
     parameters:
@@ -74,14 +74,14 @@ jobs:
     executor: << parameters.version >>
     steps:
       - checkout
-      {%- if conf.bench.install_commandline.is_some() %}
+      {%- if conf.bench.install_commandline().is_some() %}
       - run:
           name: Install
-          command: {{conf.bench.install_commandline.as_ref().unwrap().as_str()}}
+          command: {{conf.bench.install_commandline().unwrap()}}
       {%- endif %}
       - run:
           name: Bench
-          command: {{conf.bench.commandline.as_str()}}
+          command: {{conf.bench.commandline()}}
 
   ci_success:
     docker:
@@ -100,19 +100,19 @@ workflows:
           version: {{version}}
           filters: {{filters|json}}
       {%- endfor %}
-      {%- if conf.rustfmt.run %}
+      {%- if conf.rustfmt.run() %}
       - rustfmt:
-          version: {{conf.rustfmt.version}}
+          version: {{conf.rustfmt.version()}}
           filters: {{filters|json}}
       {%- endif %}
-      {%- if conf.clippy.run %}
+      {%- if conf.clippy.run() %}
       - clippy:
-          version: {{conf.clippy.version}}
+          version: {{conf.clippy.version()}}
           filters: {{filters|json}}
       {%- endif %}
-      {%- if conf.bench.run %}
+      {%- if conf.bench.run() %}
       - bench:
-          version: {{conf.bench.version}}
+          version: {{conf.bench.version()}}
           filters: {{filters|json}}
       {%- endif %}
       - ci_success:
@@ -120,12 +120,12 @@ workflows:
           {%- for version in conf.versions %}
           - test-{{version}}
           {%- endfor %}
-          {%- if conf.rustfmt.run %}
+          {%- if conf.rustfmt.run() %}
           - rustfmt
           {%- endif %}
-          {%- if conf.clippy.run %}
+          {%- if conf.clippy.run() %}
           - clippy
           {%- endif %}
-          {%- if conf.bench.run %}
+          {%- if conf.bench.run() %}
           - bench
           {%- endif %}
