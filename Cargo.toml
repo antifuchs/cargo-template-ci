@@ -12,7 +12,7 @@ documentation = "https://docs.rs/cargo-template-ci"
 build = "build.rs"
 
 [badges]
-circleci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
+circle-ci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
 maintenance = { status = "passively-maintained" }
 
 [package.metadata.release]
