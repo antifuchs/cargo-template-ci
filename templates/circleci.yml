@@ -30,7 +30,11 @@ jobs:
     parameters:
       version:
         type: executor
+      version_name:
+        type: string
     executor: << parameters.version >>
+    environment:
+      CI_RUST_VERSION: << parameters.version_name >>
     steps:
       - checkout
       - cargo_test
@@ -98,6 +102,7 @@ workflows:
       - test:
           name: test-{{version}}
           version: {{version}}
+          version_name: {{version}}
           filters: {{filters|json}}
       {%- endfor %}
       {%- if conf.rustfmt.run() %}
