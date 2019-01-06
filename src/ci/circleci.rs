@@ -1,3 +1,4 @@
+use serde_derive::Serialize;
 use std::io;
 
 use super::CISystem;
@@ -9,11 +10,15 @@ use askama::Template;
 #[template(path = "circleci.yml")]
 pub(crate) struct CircleCI<'a> {
     conf: TemplateCIConfig<'a>,
+    filters: Filters,
 }
 
 impl<'a> From<TemplateCIConfig<'a>> for CircleCI<'a> {
     fn from(conf: TemplateCIConfig<'a>) -> Self {
-        CircleCI { conf }
+        CircleCI {
+            filters: Filters::from_config(&conf),
+            conf,
+        }
     }
 }
 
@@ -21,5 +26,35 @@ impl<'a> CISystem<'a> for CircleCI<'a> {
     fn write_preamble(&self, mut output: impl io::Write) -> Result<(), super::Error> {
         writeln!(&mut output, "# {:?}", self.conf)?;
         Ok(())
+    }
+}
+
+#[derive(Serialize, Debug)]
+pub(crate) struct SpecificFilters {
+    only: Vec<String>,
+    ignore: Vec<String>,
+}
+
+#[derive(Serialize, Debug)]
+pub(crate) struct Filters {
+    branches: SpecificFilters,
+    tags: SpecificFilters,
+}
+
+impl Filters {
+    fn from_config<'a>(_conf: &'a TemplateCIConfig<'a>) -> Filters {
+        // TODO: fill in configurable branches
+        let branches = vec!["master", "trying", "staging"];
+        let tags = vec![r"/^v\d+\.\d+\.\d+.*$/"];
+        Filters {
+            branches: SpecificFilters {
+                only: branches.into_iter().map(String::from).collect(),
+                ignore: vec![],
+            },
+            tags: SpecificFilters {
+                only: tags.into_iter().map(String::from).collect(),
+                ignore: vec![],
+            },
+        }
     }
 }

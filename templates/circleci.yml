@@ -13,12 +13,6 @@ jobs:
           name: Test
           command: "cargo test"
 
-  prereq:
-    docker:
-      - image: scratch
-    steps:
-      - run: /usr/bin/true
-
   test-stable:
     docker:
       - image: liuchong/rustup:stable
@@ -80,31 +74,19 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - prereq:
-          filters:
-            tags:
-              only:
-                # release tags
-                - /^v\d+\.\d+\.\d+.*$/
-            branches:
-              only:
-                # bors branches:
-                - master
-                - trying
-                - staging
       {%- for version in conf.versions %}
       - test-{{version}}:
-          requires: [prereq]
+          filters: {{filters|json}}
       {%- endfor %}
       {%- if conf.rustfmt.run %}
       - rustfmt:
-          requires: [prereq]
+          filters: {{filters|json}}
       {%- endif %}
       {%- if conf.clippy.run %}
       - clippy:
-          requires: [prereq]
+          filters: {{filters|json}}
       {%- endif %}
       {%- if conf.bench.run %}
       - bench:
-          requires: [prereq]
+          filters: {{filters|json}}
       {%- endif %}

@@ -14,12 +14,6 @@ jobs:
           name: Test
           command: "cargo test"
 
-  prereq:
-    docker:
-      - image: scratch
-    steps:
-      - run: /usr/bin/true
-
   test-stable:
     docker:
       - image: liuchong/rustup:stable
@@ -72,23 +66,71 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - prereq:
-          filters:
-            tags:
-              only:
-                # release tags
-                - /^v\d+\.\d+\.\d+.*$/
-            branches:
-              only:
-                # bors branches:
-                - master
-                - trying
-                - staging
       - test-stable:
-          requires: [prereq]
+          filters: {
+  "branches": {
+    "only": [
+      "master",
+      "trying",
+      "staging"
+    ],
+    "ignore": []
+  },
+  "tags": {
+    "only": [
+      "/^v\\d+\\.\\d+\\.\\d+.*$/"
+    ],
+    "ignore": []
+  }
+}
       - test-nightly:
-          requires: [prereq]
+          filters: {
+  "branches": {
+    "only": [
+      "master",
+      "trying",
+      "staging"
+    ],
+    "ignore": []
+  },
+  "tags": {
+    "only": [
+      "/^v\\d+\\.\\d+\\.\\d+.*$/"
+    ],
+    "ignore": []
+  }
+}
       - rustfmt:
-          requires: [prereq]
+          filters: {
+  "branches": {
+    "only": [
+      "master",
+      "trying",
+      "staging"
+    ],
+    "ignore": []
+  },
+  "tags": {
+    "only": [
+      "/^v\\d+\\.\\d+\\.\\d+.*$/"
+    ],
+    "ignore": []
+  }
+}
       - clippy:
-          requires: [prereq]
+          filters: {
+  "branches": {
+    "only": [
+      "master",
+      "trying",
+      "staging"
+    ],
+    "ignore": []
+  },
+  "tags": {
+    "only": [
+      "/^v\\d+\\.\\d+\\.\\d+.*$/"
+    ],
+    "ignore": []
+  }
+}
