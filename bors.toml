@@ -1,6 +1,7 @@
 # Don't forget to update permissions and add this repo in
 # https://app.bors.tech/repositories so bors can see the new repo!
 
- status = [
+status = [
   "build_and_test",
 ]
+timeout = 300
