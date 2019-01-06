@@ -18,7 +18,7 @@ jobs:
     docker:
       - image: alpine:latest
     steps:
-      - run: /usr/bin/true
+      - run: /bin/true
 
   test-stable:
     docker:
