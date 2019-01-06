@@ -30,7 +30,7 @@ pub(crate) struct MatrixEntry {
 }
 
 pub(crate) trait MatrixEntryExt {
-    fn the_entry<'a>(&'a self) -> &'a MatrixEntry;
+    fn the_entry(&'_ self) -> &'_ MatrixEntry;
 
     fn run(&self) -> bool {
         self.the_entry().run

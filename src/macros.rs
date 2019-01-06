@@ -8,7 +8,7 @@ macro_rules! define_matrix_entry {
         pub(crate) struct $name(MatrixEntry);
 
         impl MatrixEntryExt for $name {
-            fn the_entry<'a>(&'a self) -> &'a MatrixEntry {
+            fn the_entry(&'_ self) -> &'_ MatrixEntry {
                 &self.0
             }
         }
