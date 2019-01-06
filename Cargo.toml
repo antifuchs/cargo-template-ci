@@ -24,16 +24,13 @@ tag-message = "Release {{prefix}}{{version}}"
 dev-version-ext = "dev"
 tag-prefix = "v"
 
-[package.metadata.template_ci.clippy]
-allow_failure = false
-
 [package.metadata.template_ci.additional_matrix_entries.something_custom]
 name = "custom_templated_run"
 install_commandline='echo "installing for custom tests"'
 commandline='echo "running custom tests"'
 
 [dependencies]
-askama = "0.7.2"
+askama = { version = "0.7.2", features=["serde-json"]}
 cargo_metadata = "0.6.0"
 failure = "0.1.1"
 failure_derive = "0.1.1"
@@ -42,6 +39,8 @@ serde_derive = "1.0.80"
 serde_json = "1.0.32"
 clap = "2.32.0"
 tempfile = "3.0.4"
+custom_error = "1.3.0"
+structopt = "0.2.14"
 
 [build-dependencies]
-askama = "0.7.2"
+askama = { version = "0.7.2", features=["serde-json"]}
