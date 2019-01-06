@@ -30,10 +30,7 @@ enum Cmdline {
 #[derive(StructOpt, Debug)]
 enum GenerateCommand {
     #[structopt(name = "travis", about = "Generate travis-ci configuration")]
-    TravisCI {
-        #[structopt(long = "travis-config", help = "Path to travis CI yaml config")]
-        config_path: Option<String>,
-    },
+    TravisCI,
 
     #[structopt(name = "circleci", about = "Generate circleci configuration")]
     CircleCI,
@@ -41,7 +38,7 @@ enum GenerateCommand {
 
 impl Default for GenerateCommand {
     fn default() -> Self {
-        GenerateCommand::TravisCI { config_path: None }
+        GenerateCommand::TravisCI
     }
 }
 
@@ -52,26 +49,19 @@ fn main() -> Result<(), Box<std::error::Error>> {
         cargo_manifest,
     } = opts;
 
-    let conf: config::TemplateCIConfig =
+    let (conf, mut dest) =
         config::TemplateCIConfig::from_manifest(cargo_manifest.as_ref().map(|pb| pb.as_path()))?;
 
     match cmd.unwrap_or_default() {
-        GenerateCommand::TravisCI { config_path } => {
-            TravisCI::from(conf).render_into_config_file(PathBuf::from(
-                config_path.unwrap_or_else(|| ".travis.yml".to_string()),
-            ))?;
+        GenerateCommand::TravisCI => {
+            dest.push(".travis.yml");
+            TravisCI::from(conf).render_into_config_file(dest)?;
         }
         GenerateCommand::CircleCI => {
-            CircleCI::from(conf).render_into_config_file(PathBuf::from(".circleci/config.yml"))?;
+            dest.push(".circleci");
+            dest.push("config.yml");
+            CircleCI::from(conf).render_into_config_file(dest)?;
         }
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert!(true);
-    }
 }

@@ -1,12 +1,13 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::io;
+use std::ops::Deref;
+use std::path::{Path, PathBuf};
 
 use cargo_metadata;
 use custom_error::custom_error;
 use serde::de::{Deserialize, Deserializer};
 use serde_derive::Deserialize;
 use serde_json;
-use std::ops::Deref;
 
 trait OptionDeref<T: Deref> {
     fn as_deref(&self) -> Option<&T::Target>;
@@ -124,19 +125,32 @@ impl Default for TemplateCIConfig {
 }
 
 impl<'a> TemplateCIConfig {
-    pub(crate) fn from_manifest(path: Option<&Path>) -> Result<TemplateCIConfig, Error> {
+    pub(crate) fn from_manifest(path: Option<&Path>) -> Result<(TemplateCIConfig, PathBuf), Error> {
         #[derive(Debug, Deserialize)]
         struct Metadata {
             #[serde(default)]
             template_ci: Option<TemplateCIConfig>,
         }
         let metadata = cargo_metadata::metadata(path)?;
+        let root_dir = match path {
+            None => {
+                let cargo_path = &metadata.packages[0].manifest_path;
+                let p = Path::new(cargo_path);
+                p.parent()
+                    .unwrap_or_else(|| panic!("The manifest at {:?} should live in a directory", p))
+                    .to_path_buf()
+            }
+            Some(path) => path
+                .parent()
+                .unwrap_or_else(|| panic!("The given path {:?} should have a parent dir", path))
+                .to_path_buf(),
+        };
         match &metadata.packages[0].metadata {
-            serde_json::Value::Null => Ok(Default::default()),
+            serde_json::Value::Null => Ok((Default::default(), root_dir)),
             md => {
                 let metadata_str = md.to_string();
                 let config: Metadata = serde_json::from_str(&metadata_str)?;
-                Ok(config.template_ci.unwrap_or_default())
+                Ok((config.template_ci.unwrap_or_default(), root_dir))
             }
         }
     }
@@ -165,7 +179,7 @@ impl<'a> TemplateCIConfig {
 custom_error! {pub Error
                CargoError{source: cargo_metadata::Error} = "Could not get cargo metadata",
                Deserialization{source: serde_json::Error} = "Could not parse cargo metadata",
-
+               IO{source: io::Error} = "IO",
 }
 
 #[cfg(test)]
@@ -258,7 +272,7 @@ commandline='echo "running custom tests"'
 os = "foo"
 "#,
             )?;
-            let conf = TemplateCIConfig::from_manifest(Some(&f))?;
+            let (conf, _) = TemplateCIConfig::from_manifest(Some(&f))?;
             assert_eq!(conf.os, "foo");
             assert_eq!(conf.dist, TemplateCIConfig::default().dist);
         }

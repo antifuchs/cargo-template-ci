@@ -1,4 +1,6 @@
 use askama;
+use std::env::current_dir;
+use std::fs::create_dir_all;
 use std::io;
 use std::io::Write;
 use std::path::PathBuf;
@@ -22,14 +24,86 @@ pub(crate) trait CISystem: askama::Template {
     /// given config file or to the default location.
     fn render_into_config_file(&self, destination: PathBuf) -> Result<(), Error> {
         let dest = destination.as_path();
-        // TODO: canonicalization fails if the file does not exist:
-        let dest = dest.canonicalize()?;
-        let dest_dir = dest.parent().unwrap(); // TODO: that unwrap
+        let dest_dir = match dest.parent() {
+            Some(dir) => dir.to_path_buf(),
+            None => current_dir()?,
+        };
+        create_dir_all(&dest_dir)?;
         let output = tempfile::NamedTempFile::new_in(dest_dir)?;
 
         self.write_preamble(&output)?;
         writeln!(&output, "{}", self.render()?)?;
         output.persist(dest)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CISystem;
+    use askama;
+    use custom_error::custom_error;
+    use std::fmt;
+    use std::fs;
+    use std::io;
+    use tempfile;
+
+    custom_error! {Error
+                   IO{source: io::Error} = "IO",
+                   Fmt{source: fmt::Error} = "fmt",
+                   Tempfile{source: tempfile::PersistError} = "Test setup/teardown",
+                   CIError{source: super::Error} = "error from the CI config mechanics",
+    }
+
+    struct NonSystem {}
+
+    impl askama::Template for NonSystem {
+        fn render_into(&self, _writer: &mut fmt::Write) -> askama::Result<()> {
+            Ok(())
+        }
+
+        fn extension(&self) -> Option<&str> {
+            None
+        }
+    }
+
+    impl CISystem for NonSystem {
+        fn write_preamble(&self, _output: impl io::Write) -> Result<(), super::Error> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn without_existing_file() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let sys = NonSystem {};
+            let path = dir.path();
+            sys.render_into_config_file(path.join("does_not_exist.tmp"))?;
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn when_dir_does_not_exist() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let sys = NonSystem {};
+            let path = dir.path();
+            sys.render_into_config_file(path.join("dir_not_there/does_not_exist.tmp"))?;
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn when_dir_exists() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let sys = NonSystem {};
+            let path = dir.path();
+            fs::create_dir(path.join("dir_exists"))?;
+            sys.render_into_config_file(path.join("dir_exists/does_not_exist.tmp"))?;
+            Ok(())
+        }
     }
 }
