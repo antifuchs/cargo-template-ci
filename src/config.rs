@@ -165,4 +165,103 @@ impl<'a> TemplateCIConfig {
 custom_error! {pub Error
                CargoError{source: cargo_metadata::Error} = "Could not get cargo metadata",
                Deserialization{source: serde_json::Error} = "Could not parse cargo metadata",
+
+}
+
+#[cfg(test)]
+mod tests {
+    use custom_error::*;
+    use std::fs::File;
+    use std::io;
+    use std::io::Write;
+    use std::path::PathBuf;
+    use tempfile;
+
+    use super::TemplateCIConfig;
+
+    custom_error! {Error
+                   ConfigError{source: super::Error} = "configuration error",
+                   IO{source: io::Error} = "IO",
+                   Tempfile{source: tempfile::PersistError} = "Test setup/teardown",
+    }
+
+    fn create_cargo_file(dir: &tempfile::TempDir, extra_content: &str) -> Result<PathBuf, Error> {
+        let path = dir.path().join("Cargo.toml");
+        let f = File::create(&path)?;
+        writeln!(
+            &f,
+            r#"
+[package]
+name = "testing"
+version = "0.0.1"
+[lib]
+name = "foo"
+path = "/dev/null"
+"#
+        )?;
+        writeln!(&f, "{}", extra_content)?;
+        Ok(path)
+    }
+
+    #[test]
+    fn parses_cargo_without_metadata() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let f = create_cargo_file(&dir, "")?;
+            let _conf = TemplateCIConfig::from_manifest(Some(&f))?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parses_cargo_without_matching_metadata() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let f = create_cargo_file(
+                &dir,
+                r#"
+[package.metadata.foo]
+bar = "baz"
+"#,
+            )?;
+            let _conf = TemplateCIConfig::from_manifest(Some(&f))?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parses_cargo_with_custom_entry() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let f = create_cargo_file(
+                &dir,
+                r#"
+[package.metadata.template_ci.additional_matrix_entries.something_custom]
+name = "custom_templated_run"
+install_commandline='echo "installing for custom tests"'
+commandline='echo "running custom tests"'
+"#,
+            )?;
+            let _conf = TemplateCIConfig::from_manifest(Some(&f))?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parses_cargo_customizing_stuff() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let f = create_cargo_file(
+                &dir,
+                r#"
+[package.metadata.template_ci]
+os = "foo"
+"#,
+            )?;
+            let conf = TemplateCIConfig::from_manifest(Some(&f))?;
+            assert_eq!(conf.os, "foo");
+            assert_eq!(conf.dist, TemplateCIConfig::default().dist);
+        }
+        Ok(())
+    }
 }
