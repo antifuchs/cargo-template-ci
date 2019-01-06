@@ -4,4 +4,4 @@
 status = [
   "build_and_test",
 ]
-timeout = 300
+timeout_sec = 300
