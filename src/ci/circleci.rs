@@ -47,12 +47,15 @@ pub(crate) struct Filters {
 impl Filters {
     fn from_config<'a>(_conf: &'a TemplateCIConfig<'a>) -> Filters {
         // TODO: fill in configurable branches
-        let branches = vec!["master", "trying", "staging"];
+        let branch_ignore_patterns = vec![r"/.*\.tmp/"];
         let tags = vec![r"/^v\d+\.\d+\.\d+.*$/"];
         Filters {
             branches: SpecificFilters {
-                only: branches.into_iter().map(String::from).collect(),
-                ignore: vec![],
+                only: vec![],
+                ignore: branch_ignore_patterns
+                    .into_iter()
+                    .map(String::from)
+                    .collect(),
             },
             tags: SpecificFilters {
                 only: tags.into_iter().map(String::from).collect(),

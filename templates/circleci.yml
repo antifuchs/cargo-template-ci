@@ -1,32 +1,40 @@
-version: 2
+version: "2.1"
 
-jobs:
-  test-base:
-    docker:
-      - image: liuchong/rustup:stable
-    steps: &test_steps
-      - checkout
+commands:
+  cargo_test:
+    description: "Run `cargo test`"
+    steps:
       - run:
-          name: Debug info
+          name: "Clean out rust-toolchain"
+          command: "rm -f rust-toolchain"
+      - run:
+          name: "Toolchain debug info"
           command: "rustc --version"
       - run:
           name: Test
           command: "cargo test"
 
+jobs:
   test-stable:
     docker:
       - image: liuchong/rustup:stable
-    steps: *test_steps
+    steps:
+      - checkout
+      - cargo_test
 
   test-nightly:
     docker:
       - image: liuchong/rustup:nightly
-    steps: *test_steps
+    steps:
+      - checkout
+      - cargo_test
 
   test-beta:
     docker:
       - image: liuchong/rustup:beta
-    steps: *test_steps
+    steps:
+      - checkout
+      - cargo_test
 
   rustfmt:
     docker:
@@ -89,19 +97,4 @@ workflows:
       {%- if conf.bench.run %}
       - bench:
           filters: {{filters|json}}
-      {%- endif %}
-
-  pr:
-    jobs:
-      {%- for version in conf.versions %}
-      - test-{{version}}
-      {%- endfor %}
-      {%- if conf.rustfmt.run %}
-      - rustfmt
-      {%- endif %}
-      {%- if conf.clippy.run %}
-      - clippy
-      {%- endif %}
-      {%- if conf.bench.run %}
-      - bench
       {%- endif %}
