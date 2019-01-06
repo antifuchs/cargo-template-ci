@@ -2,6 +2,6 @@
 # https://app.bors.tech/repositories so bors can see the new repo!
 
 status = [
-  "build_and_test",
+  "ci/circleci: ci_success",
 ]
 timeout_sec = 300
