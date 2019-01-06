@@ -72,7 +72,7 @@ jobs:
 
   ci_success:
     docker:
-      image: alpine:latest
+      - image: alpine:latest
     steps:
       - run:
           name: Success
