@@ -1,5 +1,16 @@
 version: "2.1"
 
+executors:
+  stable:
+    docker:
+      - image: liuchong/rustup:stable
+  nightly:
+    docker:
+      - image: liuchong/rustup:nightly
+  beta:
+    docker:
+      - image: liuchong/rustup:beta
+
 commands:
   cargo_test:
     description: "Run `cargo test`"
@@ -15,30 +26,20 @@ commands:
           command: "cargo test"
 
 jobs:
-  test-stable:
-    docker:
-      - image: liuchong/rustup:stable
-    steps:
-      - checkout
-      - cargo_test
-
-  test-nightly:
-    docker:
-      - image: liuchong/rustup:nightly
-    steps:
-      - checkout
-      - cargo_test
-
-  test-beta:
-    docker:
-      - image: liuchong/rustup:beta
+  test:
+    parameters:
+      version:
+        type: executor
+    executor: << parameters.version >>
     steps:
       - checkout
       - cargo_test
 
   rustfmt:
-    docker:
-      - image: liuchong/rustup:{{conf.rustfmt.version}}
+    parameters:
+      version:
+        type: executor
+    executor: << parameters.version >>
     steps:
       - checkout
       {%- if conf.rustfmt.install_commandline.is_some() %}
@@ -51,8 +52,10 @@ jobs:
           command: {{conf.rustfmt.commandline.as_str()}}
 
   clippy:
-    docker:
-      - image: liuchong/rustup:{{conf.clippy.version}}
+    parameters:
+      version:
+        type: executor
+    executor: << parameters.version >>
     steps:
       - checkout
       {%- if conf.clippy.install_commandline.is_some() %}
@@ -65,8 +68,10 @@ jobs:
           command: {{conf.clippy.commandline.as_str()}}
 
   bench:
-    docker:
-      - image: liuchong/rustup:{{conf.bench.version}}
+    parameters:
+      version:
+        type: executor
+    executor: << parameters.version >>
     steps:
       - checkout
       {%- if conf.bench.install_commandline.is_some() %}
@@ -91,18 +96,22 @@ workflows:
     jobs:
       {%- for version in conf.versions %}
       - test-{{version}}:
+          version: {{version}}
           filters: {{filters|json}}
       {%- endfor %}
       {%- if conf.rustfmt.run %}
       - rustfmt:
+          version: {{conf.rustfmt.version}}
           filters: {{filters|json}}
       {%- endif %}
       {%- if conf.clippy.run %}
       - clippy:
+          version: {{conf.clippy.version}}
           filters: {{filters|json}}
       {%- endif %}
       {%- if conf.bench.run %}
       - bench:
+          version: {{conf.bench.version}}
           filters: {{filters|json}}
       {%- endif %}
       - ci_success:
