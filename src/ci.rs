@@ -14,7 +14,7 @@ custom_error! {pub Error
                PersistError{source: tempfile::PersistError} = "could not overwrite",
 }
 
-pub(crate) trait CISystem<'a>: askama::Template {
+pub(crate) trait CISystem: askama::Template {
     /// Writes any comments / preamble / debug data to the CI config file.
     fn write_preamble(&self, output: impl io::Write) -> Result<(), Error>;
 

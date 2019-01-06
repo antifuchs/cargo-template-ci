@@ -1,195 +1,16 @@
-use std::collections::HashMap;
+#![deny(warnings)]
 
-use cargo_metadata;
-use serde::de::{Deserialize, Deserializer};
-use serde_derive::Deserialize;
-use serde_json;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+#[macro_use]
+mod macros;
+
 mod ci;
+mod config;
 
 use crate::ci::{circleci::CircleCI, travis::TravisCI, CISystem};
-
-macro_rules! define_matrix_entry {
-    ($name:ident,
-     ($run_default:expr,
-      $version_default:expr,
-      $install_default:expr,
-      $commandline_default:expr)) => {
-        #[derive(Debug)]
-        struct $name<'a> {
-            run: bool,
-            version: &'a str,
-            // TODO: this needs to be shell-escaped!
-            install_commandline: Option<String>,
-            commandline: String,
-        }
-
-        impl<'a> Default for $name<'a> {
-            fn default() -> Self {
-                let cmdline: Option<String> = $commandline_default.into();
-                $name {
-                    run: $run_default,
-                    version: $version_default,
-                    install_commandline: $install_default.into(),
-                    commandline: cmdline.unwrap_or("/bin/false".to_owned()),
-                }
-            }
-        }
-
-        // Since we can't easily (or at all?) pass default expresisons
-        // to serde, we have to define our own
-        // deserializer. Thankfully, you can deserialize into an
-        // intermediate struct and then assign / default the values
-        // from Default::default().
-        impl<'de: 'a, 'a> Deserialize<'de> for $name<'a> {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                #[derive(Deserialize)]
-                struct DeserializationStruct<'a> {
-                    run: Option<bool>,
-                    version: Option<&'a str>,
-                    install_commandline: Option<String>,
-                    commandline: Option<String>,
-                }
-                impl<'a> Default for DeserializationStruct<'a> {
-                    fn default() -> Self {
-                        DeserializationStruct {
-                            run: Some($run_default),
-                            version: Some($version_default),
-                            install_commandline: $install_default.into(),
-                            commandline: $commandline_default.into(),
-                        }
-                    }
-                }
-                let raw: DeserializationStruct = DeserializationStruct::deserialize(deserializer)?;
-                let res = $name {
-                    run: raw.run.or(DeserializationStruct::default().run).unwrap(),
-                    version: raw
-                        .version
-                        .or(DeserializationStruct::default().version)
-                        .unwrap(),
-                    install_commandline: raw
-                        .install_commandline
-                        .or(DeserializationStruct::default().install_commandline),
-                    commandline: raw
-                        .commandline
-                        .or(DeserializationStruct::default().commandline)
-                        .expect("Matrix entries need a commandline"),
-                };
-                Ok(res)
-            }
-        }
-    };
-}
-
-define_matrix_entry!(
-    BenchEntry,
-    (false, "nightly", None, "cargo bench".to_owned())
-);
-define_matrix_entry!(
-    ClippyEntry,
-    (
-        true,
-        "stable",
-        "rustup component add clippy".to_owned(),
-        "cargo clippy -- -D warnings".to_owned()
-    )
-);
-define_matrix_entry!(
-    RustfmtEntry,
-    (
-        true,
-        "stable",
-        "rustup component add rustfmt".to_owned(),
-        "cargo fmt -v -- --check".to_owned()
-    )
-);
-
-define_matrix_entry!(CustomEntry, (false, "stable", None, None));
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct TemplateCIConfig<'a> {
-    #[serde(borrow)]
-    #[serde(default)]
-    bench: BenchEntry<'a>,
-
-    #[serde(borrow)]
-    #[serde(default)]
-    clippy: ClippyEntry<'a>,
-
-    #[serde(borrow)]
-    #[serde(default)]
-    rustfmt: RustfmtEntry<'a>,
-
-    #[serde(borrow)]
-    #[serde(default)]
-    additional_matrix_entries: HashMap<&'a str, CustomEntry<'a>>,
-
-    #[serde(default = "TemplateCIConfig::default_cache")]
-    cache: &'a str,
-
-    #[serde(default = "TemplateCIConfig::default_os")]
-    os: &'a str,
-
-    #[serde(default = "TemplateCIConfig::default_dist")]
-    dist: &'a str,
-
-    #[serde(default = "TemplateCIConfig::default_versions")]
-    #[serde(borrow)]
-    versions: Vec<&'a str>,
-
-    #[serde(default = "TemplateCIConfig::default_test_commandline")]
-    test_commandline: String,
-}
-
-impl<'a> Default for TemplateCIConfig<'a> {
-    fn default() -> Self {
-        TemplateCIConfig {
-            clippy: Default::default(),
-            bench: Default::default(),
-            rustfmt: Default::default(),
-            additional_matrix_entries: Default::default(),
-            dist: "xenial",
-            cache: "cargo",
-            os: "linux",
-            versions: vec!["stable", "nightly"],
-            test_commandline: "cargo test --verbose --all".to_owned(),
-        }
-    }
-}
-
-impl<'a> TemplateCIConfig<'a> {
-    fn default_cache() -> &'a str {
-        Self::default().cache
-    }
-
-    fn default_os() -> &'a str {
-        Self::default().os
-    }
-
-    fn default_dist() -> &'a str {
-        Self::default().dist
-    }
-
-    fn default_versions() -> Vec<&'a str> {
-        Self::default().versions
-    }
-
-    fn default_test_commandline() -> String {
-        Self::default().test_commandline
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct Metadata<'a> {
-    #[serde(default)]
-    #[serde(borrow)]
-    template_ci: TemplateCIConfig<'a>,
-}
+pub(crate) use crate::config::TemplateCIConfig;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
@@ -201,6 +22,8 @@ enum Cmdline {
     TemplateCI {
         #[structopt(subcommand)]
         cmd: Option<GenerateCommand>,
+        #[structopt(long = "manifest", help = "Path to Cargo.toml", parse(from_os_str))]
+        cargo_manifest: Option<PathBuf>,
     },
 }
 
@@ -222,28 +45,27 @@ impl Default for GenerateCommand {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<std::error::Error>> {
     let opts = Cmdline::from_args();
+    let Cmdline::TemplateCI {
+        cmd,
+        cargo_manifest,
+    } = opts;
 
-    let md = cargo_metadata::metadata(None).expect("Could not get cargo metadata");
-    let pkg_metadata = md.packages[0].metadata.to_string();
-    let config: Metadata<'_> = serde_json::from_str(&pkg_metadata).expect("Could not parse config");
+    let conf: config::TemplateCIConfig =
+        config::TemplateCIConfig::from_manifest(cargo_manifest.as_ref().map(|pb| pb.as_path()))?;
 
-    let Cmdline::TemplateCI { cmd } = opts;
     match cmd.unwrap_or_default() {
         GenerateCommand::TravisCI { config_path } => {
-            TravisCI::from(config.template_ci)
-                .render_into_config_file(PathBuf::from(
-                    config_path.unwrap_or_else(|| ".travis.yml".to_string()),
-                ))
-                .expect("Failed to generate travis config");
+            TravisCI::from(conf).render_into_config_file(PathBuf::from(
+                config_path.unwrap_or_else(|| ".travis.yml".to_string()),
+            ))?;
         }
         GenerateCommand::CircleCI => {
-            CircleCI::from(config.template_ci)
-                .render_into_config_file(PathBuf::from(".circleci/config.yml"))
-                .expect("Failed to generate travis config");
+            CircleCI::from(conf).render_into_config_file(PathBuf::from(".circleci/config.yml"))?;
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]

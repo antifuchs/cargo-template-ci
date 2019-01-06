@@ -1,14 +1,14 @@
 os:
-  - "{{conf.os}}"
-dist: "{{conf.dist}}"
+  - "{{conf.os.as_str()}}"
+dist: "{{conf.dist.as_str()}}"
 
 language: rust
 sudo: required
-cache: {{conf.cache}}
+cache: {{conf.cache.as_str()}}
 
 rust:
   {%- for version in conf.versions %}
-  - {{version}}
+  - {{version.as_str()}}
   {%- endfor %}
 
 env:
@@ -17,58 +17,58 @@ env:
     - RUN_CLIPPY=false
     - RUN_BENCH=false
     {%- for c in conf.additional_matrix_entries %}
-    - RUN_{{ c.0.to_ascii_uppercase() }}=false
+    - RUN_{{ c.0.to_ascii_uppercase().as_str() }}=false
     {%- endfor %}
 
 matrix:
   fast_finish: true
   include:
-    {%- if conf.rustfmt.run %}
+    {%- if conf.rustfmt.run() %}
     - &rustfmt_build
-      rust: "{{conf.rustfmt.version}}"
+      rust: "{{conf.rustfmt.version()}}"
       env:
         - RUN_RUSTFMT=true
         - RUN_TEST=false
     {%- endif %}
-    {%- if conf.bench.run %}
+    {%- if conf.bench.run() %}
     - &bench_build
-      rust: "{{conf.bench.version}}"
+      rust: "{{conf.bench.version()}}"
       env:
         - RUN_BENCH=true
         - RUN_TEST=false
     {%- endif %}
-    {%- if conf.clippy.run %}
+    {%- if conf.clippy.run() %}
     - &clippy_build
-      rust: "{{conf.clippy.version}}"
+      rust: "{{conf.clippy.version()}}"
       env:
         - RUN_CLIPPY=true
         - RUN_TEST=false
     {%- endif %}
     {%- for c in conf.additional_matrix_entries %}
     - &{{c.0}}
-      rust: "{{c.1.version}}"
+      rust: "{{c.1.version()}}"
       env:
         - "RUN_TEST=false"
-        - "RUN_{{c.0.to_ascii_uppercase()}}=true"
+        - "RUN_{{c.0.to_ascii_uppercase().as_str()}}=true"
     {%- endfor %}
 
 before_script:
-  {%- if conf.rustfmt.run %}
+  {%- if conf.rustfmt.run() %}
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then
-      {{conf.rustfmt.install_commandline.as_ref().unwrap().as_str()}}
+      {{conf.rustfmt.install_commandline().unwrap()}}
       ;
     fi'
   {%- endif %}
-  {%- if conf.clippy.run %}
+  {%- if conf.clippy.run() %}
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
-      {{conf.clippy.install_commandline.as_ref().unwrap().as_str()}}
+      {{conf.clippy.install_commandline().unwrap()}}
       ;
     fi'
   {%- endif %}
   {%- for c in conf.additional_matrix_entries %}
-  {%- if c.1.install_commandline.is_some() %}
+  {%- if c.1.install_commandline().is_some() %}
   - bash -c 'if [[ "$RUN_{{c.0.to_ascii_uppercase()}}" == "true" ]]; then
-      {{c.1.install_commandline.as_ref().unwrap().as_str()}}
+      {{c.1.install_commandline().unwrap()}}
       ;
     fi'
   {%- endif %}
@@ -79,27 +79,27 @@ script:
       {{conf.test_commandline.as_str()}}
       ;
     fi'
-  {%- if conf.rustfmt.run %}
+  {%- if conf.rustfmt.run() %}
   - bash -c 'if [[ "$RUN_RUSTFMT" == "true" ]]; then
-      {{conf.rustfmt.commandline.as_str()}}
+      {{conf.rustfmt.commandline()}}
       ;
     fi'
   {%- endif %}
-  {%- if conf.bench.run %}
+  {%- if conf.bench.run() %}
   - bash -c 'if [[ "$RUN_BENCH" == "true" ]]; then
-      {{conf.bench.commandline.as_str()}}
+      {{conf.bench.commandline()}}
       ;
     fi'
   {%- endif %}
-  {%- if conf.clippy.run %}
+  {%- if conf.clippy.run() %}
   - bash -c 'if [[ "$RUN_CLIPPY" == "true" ]]; then
-      {{conf.clippy.commandline.as_str()}}
+      {{conf.clippy.commandline()}}
       ;
     fi'
   {%- endif %}
   {%- for c in conf.additional_matrix_entries %}
   - bash -c 'if [[ "$RUN_{{c.0.to_ascii_uppercase()}}" == "true" ]]; then
-      {{c.1.commandline.as_str()}}
+      {{c.1.commandline()}}
       ;
     fi'
   {%- endfor %}
