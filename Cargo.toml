@@ -1,7 +1,7 @@
 [package]
 edition = '2018'
 name = "cargo-template-ci"
-version = "0.1.0"
+version = "0.1.1-dev"
 authors = ["Andreas Fuchs <asf@boinkor.net>"]
 license = "MIT"
 repository = "https://github.com/antifuchs/cargo-template-ci"
@@ -12,7 +12,7 @@ documentation = "https://docs.rs/cargo-template-ci"
 build = "build.rs"
 
 [badges]
-travis-ci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
+circleci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
 maintenance = { status = "passively-maintained" }
 
 [package.metadata.release]
