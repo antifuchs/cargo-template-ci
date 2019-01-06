@@ -23,7 +23,7 @@ commands:
           command: "rustc --version"
       - run:
           name: Test
-          command: "cargo test"
+          command: {{conf.test_commandline.as_str()}}
 
 jobs:
   test:
