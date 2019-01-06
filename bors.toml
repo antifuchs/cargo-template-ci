@@ -5,3 +5,4 @@ status = [
   "ci/circleci: ci_success",
 ]
 timeout_sec = 300
+delete_merged_branches = true
