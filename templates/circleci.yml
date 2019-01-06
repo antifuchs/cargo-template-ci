@@ -72,7 +72,7 @@ jobs:
 
 workflows:
   version: 2
-  build_and_test:
+  continuous_integration:
     jobs:
       {%- for version in conf.versions %}
       - test-{{version}}:
@@ -89,4 +89,19 @@ workflows:
       {%- if conf.bench.run %}
       - bench:
           filters: {{filters|json}}
+      {%- endif %}
+
+  pr:
+    jobs:
+      {%- for version in conf.versions %}
+      - test-{{version}}
+      {%- endfor %}
+      {%- if conf.rustfmt.run %}
+      - rustfmt
+      {%- endif %}
+      {%- if conf.clippy.run %}
+      - clippy
+      {%- endif %}
+      {%- if conf.bench.run %}
+      - bench
       {%- endif %}

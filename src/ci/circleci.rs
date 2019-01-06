@@ -31,7 +31,10 @@ impl<'a> CISystem<'a> for CircleCI<'a> {
 
 #[derive(Serialize, Debug)]
 pub(crate) struct SpecificFilters {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     only: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     ignore: Vec<String>,
 }
 
