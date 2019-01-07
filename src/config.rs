@@ -103,6 +103,12 @@ pub(crate) struct TemplateCIConfig {
 
     #[serde(default = "TemplateCIConfig::default_test_commandline")]
     pub(crate) test_commandline: String,
+
+    #[serde(default = "TemplateCIConfig::default_scheduled_test_branches")]
+    pub(crate) scheduled_test_branches: Vec<String>,
+
+    #[serde(default = "TemplateCIConfig::default_test_schedule")]
+    pub(crate) test_schedule: String,
 }
 
 impl Default for TemplateCIConfig {
@@ -120,6 +126,8 @@ impl Default for TemplateCIConfig {
                 .map(String::from)
                 .collect(),
             test_commandline: "cargo test --verbose --all".to_owned(),
+            scheduled_test_branches: vec!["master"].into_iter().map(String::from).collect(),
+            test_schedule: "0 0 * * 0".to_string(), // every sunday at 0:00 UTC
         }
     }
 }
@@ -173,6 +181,14 @@ impl<'a> TemplateCIConfig {
 
     fn default_test_commandline() -> String {
         Self::default().test_commandline
+    }
+
+    fn default_test_schedule() -> String {
+        Self::default().test_schedule
+    }
+
+    fn default_scheduled_test_branches() -> Vec<String> {
+        Self::default().scheduled_test_branches
     }
 }
 
