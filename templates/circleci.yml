@@ -134,3 +134,20 @@ workflows:
           {%- if conf.bench.run() %}
           - bench
           {%- endif %}
+
+  {%- if !conf.scheduled_test_branches.is_empty() %}
+  scheduled_tests:
+    jobs:
+      {%- for version in conf.versions %}
+      - test:
+          name: test-{{version}}
+          version: {{version}}
+          version_name: {{version}}
+      {%- endfor %}
+    triggers:
+      - schedule:
+          cron: {{conf.test_schedule.as_str()}}
+        filters:
+          branches:
+            only: {{conf.scheduled_test_branches|json}}
+  {%- endif %}
