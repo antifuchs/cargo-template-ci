@@ -147,7 +147,7 @@ workflows:
     triggers:
       - schedule:
           cron: {{conf.test_schedule.as_str()}}
-        filters:
-          branches:
-            only: {{conf.scheduled_test_branches|json}}
+          filters:
+            branches:
+              only: {{conf.scheduled_test_branches|json}}
   {%- endif %}
