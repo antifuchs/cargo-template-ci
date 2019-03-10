@@ -87,6 +87,28 @@ jobs:
           name: Bench
           command: {{conf.bench.commandline()}}
 
+  {%- for custom in conf.additional_matrix_entries %}
+  {{custom.0}}:
+    parameters:
+      version:
+        type: executor
+      version_name:
+        type: string
+    executor: << parameters.version >>
+    environment:
+      CI_RUST_VERSION: << parameters.version_name >>
+    steps:
+      - checkout
+      {%- if custom.1.install_commandline().is_some() %}
+      - run:
+          name: Install
+          command: {{custom.1.install_commandline().unwrap()}}
+      {%- endif %}
+      - run:
+          name: {{custom.1.commandline()}}
+          command: {{custom.1.commandline()}}
+  {%- endfor %}
+
   ci_success:
     docker:
       - image: alpine:latest
@@ -120,6 +142,12 @@ workflows:
           version: {{conf.bench.version()}}
           filters: {{filters|json}}
       {%- endif %}
+      {%- for custom in conf.additional_matrix_entries %}
+      - {{custom.0}}:
+          name: "{{custom.0}}"
+          version: {{custom.1.version()}}
+          version_name: {{custom.1.version()}}
+      {%- endfor %}
       - ci_success:
           requires:
           {%- for version in conf.versions %}
@@ -134,6 +162,9 @@ workflows:
           {%- if conf.bench.run() %}
           - bench
           {%- endif %}
+          {%- for custom in conf.additional_matrix_entries %}
+          - {{custom.0}}
+          {%- endfor %}
 
   {%- if !conf.scheduled_test_branches.is_empty() %}
   scheduled_tests:
