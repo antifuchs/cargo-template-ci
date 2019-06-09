@@ -58,7 +58,7 @@ mod tests {
     struct NonSystem {}
 
     impl askama::Template for NonSystem {
-        fn render_into(&self, _writer: &mut fmt::Write) -> askama::Result<()> {
+        fn render_into(&self, _writer: &mut dyn fmt::Write) -> askama::Result<()> {
             Ok(())
         }
 

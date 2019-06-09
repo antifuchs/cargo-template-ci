@@ -42,7 +42,7 @@ impl Default for GenerateCommand {
     }
 }
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opts = Cmdline::from_args();
     let Cmdline::TemplateCI {
         cmd,
