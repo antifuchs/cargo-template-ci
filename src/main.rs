@@ -42,7 +42,7 @@ impl Default for GenerateCommand {
     }
 }
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opts = Cmdline::from_args();
     let Cmdline::TemplateCI {
         cmd,
@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
     } = opts;
 
     let (conf, mut dest) =
-        config::TemplateCIConfig::from_manifest(cargo_manifest.as_ref().map(|pb| pb.as_path()))?;
+        config::TemplateCIConfig::from_manifest(cargo_manifest.as_ref().map(PathBuf::as_path))?;
 
     match cmd.unwrap_or_default() {
         GenerateCommand::TravisCI => {
