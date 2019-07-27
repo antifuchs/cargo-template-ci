@@ -1,7 +1,7 @@
 [package]
 edition = '2018'
 name = "cargo-template-ci"
-version = "0.1.3-dev"
+version = "0.2.0"
 authors = ["Andreas Fuchs <asf@boinkor.net>"]
 license = "MIT"
 repository = "https://github.com/antifuchs/cargo-template-ci"
@@ -10,10 +10,6 @@ description = "Generate a CI configuration from a template and Cargo config"
 documentation = "https://docs.rs/cargo-template-ci"
 
 build = "build.rs"
-
-[badges]
-circle-ci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
-maintenance = { status = "passively-maintained" }
 
 [package.metadata.release]
 sign-commit = false
@@ -28,6 +24,10 @@ tag-prefix = "v"
 name = "custom_templated_run"
 install_commandline='echo "installing for custom tests"'
 commandline='echo "running custom tests"'
+
+[badges]
+circle-ci = { repository = "antifuchs/cargo-template-ci", branch = "master" }
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 askama = { version = "0.7.2", features=["serde-json"]}
