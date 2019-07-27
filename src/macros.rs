@@ -18,6 +18,7 @@ macro_rules! define_matrix_entry {
                 let cmdline: Option<String> = $commandline_default.into();
                 $name(MatrixEntry {
                     run: $run_default,
+                    run_cron: false,
                     version: String::from($version_default),
                     install_commandline: $install_default.into(),
                     commandline: cmdline.unwrap_or("/bin/false".to_owned()),
@@ -38,6 +39,7 @@ macro_rules! define_matrix_entry {
                 #[derive(Deserialize)]
                 struct DeserializationStruct {
                     run: Option<bool>,
+                    run_cron: Option<bool>,
                     version: Option<String>,
                     install_commandline: Option<String>,
                     commandline: Option<String>,
@@ -46,6 +48,7 @@ macro_rules! define_matrix_entry {
                     fn default() -> Self {
                         DeserializationStruct {
                             run: Some($run_default),
+                            run_cron: Some(false),
                             version: Some(String::from($version_default)),
                             install_commandline: $install_default.into(),
                             commandline: $commandline_default.into(),
@@ -55,6 +58,10 @@ macro_rules! define_matrix_entry {
                 let raw: DeserializationStruct = DeserializationStruct::deserialize(deserializer)?;
                 let res = $name(MatrixEntry {
                     run: raw.run.or(DeserializationStruct::default().run).unwrap(),
+                    run_cron: raw
+                        .run_cron
+                        .or(DeserializationStruct::default().run_cron)
+                        .unwrap(),
                     version: raw
                         .version
                         .or(DeserializationStruct::default().version)

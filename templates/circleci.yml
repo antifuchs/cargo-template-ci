@@ -163,7 +163,9 @@ workflows:
           - bench
           {%- endif %}
           {%- for custom in conf.additional_matrix_entries %}
+          {%- if custom.1.run() %}
           - {{custom.0}}
+          {%- endif %}
           {%- endfor %}
 
   {%- if !conf.scheduled_test_branches.is_empty() %}
@@ -174,6 +176,14 @@ workflows:
           name: test-{{version}}
           version: {{version}}
           version_name: {{version}}
+      {%- endfor %}
+      {%- for custom in conf.additional_matrix_entries %}
+      {%- if custom.1.run_cron() %}
+      - {{custom.0}}:
+          name: "{{custom.0}}"
+          version: "{{custom.1.version()}}"
+          version_name: "{{custom.1.version()}}"
+      {%- endif %}
       {%- endfor %}
     triggers:
       - schedule:

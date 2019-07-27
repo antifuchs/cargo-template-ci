@@ -22,6 +22,7 @@ impl<T: Deref> OptionDeref<T> for Option<T> {
 #[derive(Debug)]
 pub(crate) struct MatrixEntry {
     pub(crate) run: bool,
+    pub(crate) run_cron: bool,
     pub(crate) version: String,
 
     // TODO: this needs to be shell-escaped!
@@ -35,6 +36,10 @@ pub(crate) trait MatrixEntryExt {
 
     fn run(&self) -> bool {
         self.the_entry().run
+    }
+
+    fn run_cron(&self) -> bool {
+        self.the_entry().run_cron
     }
 
     fn version(&self) -> &str {
