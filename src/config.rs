@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::env::current_dir;
+use std::fs::read_to_string;
 use std::io;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
@@ -8,6 +10,7 @@ use custom_error::custom_error;
 use serde::de::{Deserialize, Deserializer};
 use serde_derive::Deserialize;
 use serde_json;
+use toml;
 
 trait OptionDeref<T: Deref> {
     fn as_deref(&self) -> Option<&T::Target>;
@@ -22,6 +25,7 @@ impl<T: Deref> OptionDeref<T> for Option<T> {
 #[derive(Debug)]
 pub(crate) struct MatrixEntry {
     pub(crate) run: bool,
+    pub(crate) run_cron: bool,
     pub(crate) version: String,
 
     // TODO: this needs to be shell-escaped!
@@ -35,6 +39,10 @@ pub(crate) trait MatrixEntryExt {
 
     fn run(&self) -> bool {
         self.the_entry().run
+    }
+
+    fn run_cron(&self) -> bool {
+        self.the_entry().run_cron
     }
 
     fn version(&self) -> &str {
@@ -133,7 +141,7 @@ impl Default for TemplateCIConfig {
 }
 
 impl<'a> TemplateCIConfig {
-    pub(crate) fn from_manifest(path: Option<&Path>) -> Result<(TemplateCIConfig, PathBuf), Error> {
+    fn from_manifest(path: Option<&Path>) -> Result<(TemplateCIConfig, PathBuf), Error> {
         #[derive(Debug, Deserialize)]
         struct Metadata {
             #[serde(default)]
@@ -161,6 +169,32 @@ impl<'a> TemplateCIConfig {
                 Ok((config.template_ci.unwrap_or_default(), root_dir))
             }
         }
+    }
+
+    fn from_config_file(
+        file_name: impl AsRef<Path>,
+        path: Option<&Path>,
+    ) -> Result<(TemplateCIConfig, PathBuf), Error> {
+        let file_name = file_name.as_ref();
+
+        let default = current_dir()?.join(file_name);
+        let path = path.unwrap_or(&default);
+        let config_src = read_to_string(path)?;
+        let config: TemplateCIConfig = toml::from_str(&config_src)?;
+        Ok((
+            config,
+            path.parent()
+                .expect("Impossible: config file has no parent")
+                .to_path_buf(),
+        ))
+    }
+
+    pub(crate) fn merged_configs(
+        path: Option<&Path>,
+    ) -> Result<(TemplateCIConfig, PathBuf), Error> {
+        TemplateCIConfig::from_config_file("template-ci.toml", path)
+            .or_else(|_| TemplateCIConfig::from_config_file(".template-ci.toml", path))
+            .or_else(|_| TemplateCIConfig::from_manifest(path))
     }
 
     fn default_cache() -> String {
@@ -195,6 +229,7 @@ impl<'a> TemplateCIConfig {
 custom_error! {pub Error
                CargoError{source: cargo_metadata::Error} = "Could not get cargo metadata",
                Deserialization{source: serde_json::Error} = "Could not parse cargo metadata",
+               TOMLDeserialization{source: toml::de::Error} = "Could not parse TOML configuration file",
                IO{source: io::Error} = "IO",
 }
 

@@ -30,11 +30,28 @@ By default, the configuration is as follows:
 * Run clippy on `nightly`, but allow failures.
 * Do not run benchmarks (but run them on `nightly` if enabled).
 
+### Configuration sources
+
 You can configure the generated config file by editing your project's
 package metadata in `Cargo.toml`: Everything lives under the key
 `package.metadata.template_ci`. This project has [an example that
 makes clippy failures
 fatal](https://github.com/antifuchs/cargo-template-ci/blob/a8740c68351cd99376c39b5906fde06e271e5e01/Cargo.toml#L27-L28).
+
+If your project uses [Cargo
+workspaces](http://doc.rust-lang.org/1.36.0/book/ch14-03-cargo-workspaces.html),
+it is impossible to add package metadata to the top-level workspace
+configuration file. For that reason, you can also put the template-ci
+config into files in the repository root:
+
+* `.template-ci.toml` or
+* `template-ci.toml`, failing that:
+* `package.metadata.template_ci` in `Cargo.toml`
+
+No configuration value merging is performed: The first configuration
+source that matches causes all other files to be ignored.
+
+## Configuration reference
 
 Here's a list of configurable keys:
 
