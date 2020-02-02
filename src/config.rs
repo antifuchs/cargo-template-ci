@@ -4,6 +4,7 @@ use std::fs::read_to_string;
 use std::io;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use cargo_metadata;
 use custom_error::custom_error;
@@ -32,6 +33,8 @@ pub(crate) struct MatrixEntry {
     pub(crate) install_commandline: Option<String>,
 
     pub(crate) commandline: String,
+
+    pub(crate) timeout: Option<Duration>,
 }
 
 pub(crate) trait MatrixEntryExt {
@@ -55,6 +58,12 @@ pub(crate) trait MatrixEntryExt {
 
     fn commandline(&self) -> &str {
         &(self.the_entry().commandline)
+    }
+
+    fn timeout(&self) -> Option<String> {
+        self.the_entry()
+            .timeout
+            .map(|to| format!("{}s", to.as_secs()))
     }
 }
 
@@ -304,6 +313,24 @@ bar = "baz"
 [package.metadata.template_ci.additional_matrix_entries.something_custom]
 name = "custom_templated_run"
 install_commandline='echo "installing for custom tests"'
+commandline='echo "running custom tests"'
+timeout='40min'
+"#,
+            )?;
+            let _conf = TemplateCIConfig::from_manifest(Some(&f))?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parses_cargo_custom_entry_only_mandatory() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let f = create_cargo_file(
+                &dir,
+                r#"
+[package.metadata.template_ci.additional_matrix_entries.something_custom]
+name = "custom_templated_run"
 commandline='echo "running custom tests"'
 "#,
             )?;
