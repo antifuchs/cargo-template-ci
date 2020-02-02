@@ -314,7 +314,7 @@ bar = "baz"
 name = "custom_templated_run"
 install_commandline='echo "installing for custom tests"'
 commandline='echo "running custom tests"'
-timeout={secs = 90, nanos = 0}
+timeout='40min'
 "#,
             )?;
             let _conf = TemplateCIConfig::from_manifest(Some(&f))?;

@@ -44,6 +44,8 @@ macro_rules! define_matrix_entry {
                     version: Option<String>,
                     install_commandline: Option<String>,
                     commandline: Option<String>,
+
+                    #[serde(with = "humantime_serde")]
                     timeout: Option<Duration>,
                 }
                 impl<'a> Default for DeserializationStruct {
