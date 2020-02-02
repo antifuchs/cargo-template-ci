@@ -323,6 +323,23 @@ timeout='40min'
     }
 
     #[test]
+    fn parses_cargo_custom_entry_only_mandatory() -> Result<(), Error> {
+        let dir = tempfile::tempdir()?;
+        {
+            let f = create_cargo_file(
+                &dir,
+                r#"
+[package.metadata.template_ci.additional_matrix_entries.something_custom]
+name = "custom_templated_run"
+commandline='echo "running custom tests"'
+"#,
+            )?;
+            let _conf = TemplateCIConfig::from_manifest(Some(&f))?;
+        }
+        Ok(())
+    }
+
+    #[test]
     fn parses_cargo_customizing_stuff() -> Result<(), Error> {
         let dir = tempfile::tempdir()?;
         {

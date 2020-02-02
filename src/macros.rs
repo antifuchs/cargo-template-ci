@@ -45,6 +45,7 @@ macro_rules! define_matrix_entry {
                     install_commandline: Option<String>,
                     commandline: Option<String>,
 
+                    #[serde(default)]
                     #[serde(with = "humantime_serde")]
                     timeout: Option<Duration>,
                 }
