@@ -54,6 +54,9 @@ jobs:
       - run:
           name: Rustfmt
           command: {{conf.rustfmt.commandline()}}
+          {%- if conf.rustfmt.timeout().is_some() %}
+          no_output_timeout: {{conf.rustfmt.timeout().unwrap()}}
+          {%- endif %}
 
   clippy:
     parameters:
@@ -70,6 +73,9 @@ jobs:
       - run:
           name: Clippy
           command: {{conf.clippy.commandline()}}
+          {%- if conf.clippy.timeout().is_some() %}
+          no_output_timeout: {{conf.clippy.timeout().unwrap()}}
+          {%- endif %}
 
   bench:
     parameters:
@@ -86,6 +92,9 @@ jobs:
       - run:
           name: Bench
           command: {{conf.bench.commandline()}}
+          {%- if conf.bench.timeout().is_some() %}
+          no_output_timeout: {{conf.bench.timeout().unwrap()}}
+          {%- endif %}
 
   {%- for custom in conf.additional_matrix_entries %}
   {{custom.0}}:
@@ -107,6 +116,9 @@ jobs:
       - run:
           name: {{custom.1.commandline()}}
           command: {{custom.1.commandline()}}
+          {%- if custom.1.timeout().is_some() %}
+          no_output_timeout: {{custom.1.timeout().unwrap()}}
+          {%- endif %}
   {%- endfor %}
 
   ci_success:

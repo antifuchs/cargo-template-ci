@@ -22,6 +22,7 @@ macro_rules! define_matrix_entry {
                     version: String::from($version_default),
                     install_commandline: $install_default.into(),
                     commandline: cmdline.unwrap_or("/bin/false".to_owned()),
+                    timeout: None,
                 })
             }
         }
@@ -43,6 +44,7 @@ macro_rules! define_matrix_entry {
                     version: Option<String>,
                     install_commandline: Option<String>,
                     commandline: Option<String>,
+                    timeout: Option<Duration>,
                 }
                 impl<'a> Default for DeserializationStruct {
                     fn default() -> Self {
@@ -52,6 +54,7 @@ macro_rules! define_matrix_entry {
                             version: Some(String::from($version_default)),
                             install_commandline: $install_default.into(),
                             commandline: $commandline_default.into(),
+                            timeout: None,
                         }
                     }
                 }
@@ -73,6 +76,7 @@ macro_rules! define_matrix_entry {
                         .commandline
                         .or(DeserializationStruct::default().commandline)
                         .expect("Matrix entries need a commandline"),
+                    timeout: raw.timeout.or(DeserializationStruct::default().timeout),
                 });
                 Ok(res)
             }
