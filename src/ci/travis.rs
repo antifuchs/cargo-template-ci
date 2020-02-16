@@ -19,8 +19,7 @@ impl From<TemplateCIConfig> for TravisCI {
 }
 
 impl CISystem for TravisCI {
-    fn write_preamble(&self, mut output: impl io::Write) -> Result<(), super::Error> {
-        writeln!(&mut output, "# {:?}", self.conf)?;
+    fn write_preamble(&self, mut _output: impl io::Write) -> Result<(), super::Error> {
         Ok(())
     }
 }
