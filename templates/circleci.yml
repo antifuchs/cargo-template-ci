@@ -1,15 +1,6 @@
 version: "2.1"
 
-executors:
-  stable:
-    docker:
-      - image: liuchong/rustup:stable
-  nightly:
-    docker:
-      - image: liuchong/rustup:nightly
-  beta:
-    docker:
-      - image: liuchong/rustup:beta
+executors: {{ conf.all_executors_for_circleci()|json }}
 
 commands:
   cargo_test:

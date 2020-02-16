@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::read_to_string;
@@ -9,7 +10,8 @@ use std::time::Duration;
 use cargo_metadata;
 use custom_error::custom_error;
 use serde::de::{Deserialize, Deserializer};
-use serde_derive::Deserialize;
+use serde::ser::Serialize;
+use serde_derive::{Deserialize, Serialize};
 use serde_json;
 use toml;
 
@@ -20,6 +22,28 @@ trait OptionDeref<T: Deref> {
 impl<T: Deref> OptionDeref<T> for Option<T> {
     fn as_deref_option(&self) -> Option<&T::Target> {
         self.as_ref().map(Deref::deref)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct ExecutorEntry {
+    pub(crate) name: String,
+    #[serde(default = "ExecutorEntry::default_image_name")]
+    pub(crate) image_name: String,
+}
+
+impl Default for ExecutorEntry {
+    fn default() -> Self {
+        ExecutorEntry {
+            name: "".to_string(),
+            image_name: "liuchong/rustup".to_string(),
+        }
+    }
+}
+
+impl ExecutorEntry {
+    fn default_image_name() -> String {
+        ExecutorEntry::default().image_name
     }
 }
 
@@ -126,6 +150,12 @@ pub(crate) struct TemplateCIConfig {
 
     #[serde(default = "TemplateCIConfig::default_test_schedule")]
     pub(crate) test_schedule: String,
+
+    #[serde(default = "TemplateCIConfig::default_executors")]
+    pub(crate) executors: Vec<ExecutorEntry>,
+
+    #[serde(default)]
+    pub(crate) additional_executors: Vec<ExecutorEntry>,
 }
 
 impl Default for TemplateCIConfig {
@@ -145,6 +175,21 @@ impl Default for TemplateCIConfig {
             test_commandline: "cargo test --verbose --all".to_owned(),
             scheduled_test_branches: vec!["master"].into_iter().map(String::from).collect(),
             test_schedule: "0 0 * * 0".to_string(), // every sunday at 0:00 UTC
+            executors: vec![
+                ExecutorEntry {
+                    name: "stable".to_string(),
+                    image_name: "liuchong/rustup:stable".to_string(),
+                },
+                ExecutorEntry {
+                    name: "beta".to_string(),
+                    image_name: "liuchong/rustup:beta".to_string(),
+                },
+                ExecutorEntry {
+                    name: "nightly".to_string(),
+                    image_name: "liuchong/rustup:nightly".to_string(),
+                },
+            ],
+            additional_executors: Default::default(),
         }
     }
 }
@@ -232,6 +277,41 @@ impl<'a> TemplateCIConfig {
 
     fn default_scheduled_test_branches() -> Vec<String> {
         Self::default().scheduled_test_branches
+    }
+
+    fn default_executors() -> Vec<ExecutorEntry> {
+        Self::default().executors
+    }
+}
+
+impl TemplateCIConfig {
+    pub(crate) fn all_executors_for_circleci(&self) -> impl Serialize {
+        #[derive(Debug, Serialize)]
+        struct DockerCfg {
+            image: String,
+        }
+        #[derive(Debug, Serialize)]
+        enum Entry {
+            #[serde(rename = "docker")]
+            Docker(Vec<DockerCfg>),
+        }
+
+        let all_executors = self
+            .executors
+            .iter()
+            .chain(self.additional_executors.iter());
+
+        let entry: BTreeMap<String, Entry> = all_executors
+            .map(|e| {
+                (
+                    e.name.clone(),
+                    Entry::Docker(vec![DockerCfg {
+                        image: e.image_name.to_string(),
+                    }]),
+                )
+            })
+            .collect();
+        entry
     }
 }
 
