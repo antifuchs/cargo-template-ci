@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::env::current_dir;
 use std::fs::read_to_string;
@@ -177,15 +178,15 @@ impl Default for TemplateCIConfig {
             executors: vec![
                 ExecutorEntry {
                     name: "stable".to_string(),
-                    ..Default::default()
+                    image_name: "liuchong/rustup:stable".to_string(),
                 },
                 ExecutorEntry {
                     name: "beta".to_string(),
-                    ..Default::default()
+                    image_name: "liuchong/rustup:beta".to_string(),
                 },
                 ExecutorEntry {
                     name: "nightly".to_string(),
-                    ..Default::default()
+                    image_name: "liuchong/rustup:nightly".to_string(),
                 },
             ],
             additional_executors: Default::default(),
@@ -300,12 +301,12 @@ impl TemplateCIConfig {
             .iter()
             .chain(self.additional_executors.iter());
 
-        let entry: HashMap<String, Entry> = all_executors
+        let entry: BTreeMap<String, Entry> = all_executors
             .map(|e| {
                 (
                     e.name.clone(),
                     Entry::Docker(vec![DockerCfg {
-                        image: format!("{}:{}", e.image_name, e.name),
+                        image: e.image_name.to_string(),
                     }]),
                 )
             })

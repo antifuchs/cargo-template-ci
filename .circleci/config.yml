@@ -1,18 +1,18 @@
-# TemplateCIConfig { bench: BenchEntry(MatrixEntry { run: false, run_cron: false, version: "nightly", install_commandline: None, commandline: "cargo bench", timeout: None }), clippy: ClippyEntry(MatrixEntry { run: true, run_cron: false, version: "stable", install_commandline: Some("rustup component add clippy"), commandline: "cargo clippy -- -D warnings", timeout: None }), rustfmt: RustfmtEntry(MatrixEntry { run: true, run_cron: false, version: "stable", install_commandline: Some("rustup component add rustfmt"), commandline: "cargo fmt -v -- --check", timeout: None }), additional_matrix_entries: {"something_custom": CustomEntry(MatrixEntry { run: false, run_cron: false, version: "stable", install_commandline: Some("echo \"installing for custom tests\""), commandline: "echo \"running custom tests\"", timeout: None })}, cache: "cargo", os: "linux", dist: "xenial", versions: ["stable", "nightly"], test_commandline: "cargo test --verbose --all", scheduled_test_branches: ["master"], test_schedule: "0 0 * * 0", executors: [ExecutorEntry { name: "stable", image_name: "liuchong/rustup" }, ExecutorEntry { name: "beta", image_name: "liuchong/rustup" }, ExecutorEntry { name: "nightly", image_name: "liuchong/rustup" }], additional_executors: [] }
+# TemplateCIConfig { bench: BenchEntry(MatrixEntry { run: false, run_cron: false, version: "nightly", install_commandline: None, commandline: "cargo bench", timeout: None }), clippy: ClippyEntry(MatrixEntry { run: true, run_cron: false, version: "stable", install_commandline: Some("rustup component add clippy"), commandline: "cargo clippy -- -D warnings", timeout: None }), rustfmt: RustfmtEntry(MatrixEntry { run: true, run_cron: false, version: "stable", install_commandline: Some("rustup component add rustfmt"), commandline: "cargo fmt -v -- --check", timeout: None }), additional_matrix_entries: {"something_custom": CustomEntry(MatrixEntry { run: false, run_cron: false, version: "stable", install_commandline: Some("echo \"installing for custom tests\""), commandline: "echo \"running custom tests\"", timeout: None })}, cache: "cargo", os: "linux", dist: "xenial", versions: ["stable", "nightly"], test_commandline: "cargo test --verbose --all", scheduled_test_branches: ["master"], test_schedule: "0 0 * * 0", executors: [ExecutorEntry { name: "stable", image_name: "liuchong/rustup:stable" }, ExecutorEntry { name: "beta", image_name: "liuchong/rustup:beta" }, ExecutorEntry { name: "nightly", image_name: "liuchong/rustup:nightly" }], additional_executors: [] }
 version: "2.1"
 
 executors: {
-  "nightly": {
-    "docker": [
-      {
-        "image": "liuchong/rustup:nightly"
-      }
-    ]
-  },
   "beta": {
     "docker": [
       {
         "image": "liuchong/rustup:beta"
+      }
+    ]
+  },
+  "nightly": {
+    "docker": [
+      {
+        "image": "liuchong/rustup:nightly"
       }
     ]
   },
