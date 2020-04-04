@@ -49,8 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cargo_manifest,
     } = opts;
 
-    let (conf, mut dest) =
-        config::TemplateCIConfig::merged_configs(cargo_manifest.as_ref().map(PathBuf::as_path))?;
+    let (conf, mut dest) = config::TemplateCIConfig::merged_configs(cargo_manifest.as_deref())?;
 
     match cmd.unwrap_or_default() {
         GenerateCommand::TravisCI => {

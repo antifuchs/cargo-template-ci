@@ -108,14 +108,6 @@ jobs:
           name: echo "running custom tests"
           command: echo "running custom tests"
 
-  ci_success:
-    docker:
-      - image: alpine:latest
-    steps:
-      - run:
-          name: Success
-          command: "echo yay"
-
 workflows:
   continuous_integration:
     jobs:
@@ -183,12 +175,6 @@ workflows:
           name: "something_custom"
           version: stable
           version_name: stable
-      - ci_success:
-          requires:
-          - test-stable
-          - test-nightly
-          - rustfmt
-          - clippy
   scheduled_tests:
     jobs:
       - test:
