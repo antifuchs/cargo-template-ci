@@ -6,6 +6,7 @@ use structopt::StructOpt;
 #[macro_use]
 mod macros;
 
+mod bors;
 mod ci;
 mod config;
 
@@ -49,18 +50,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cargo_manifest,
     } = opts;
 
-    let (conf, mut dest) = config::TemplateCIConfig::merged_configs(cargo_manifest.as_deref())?;
+    let (conf, dest) = config::TemplateCIConfig::merged_configs(cargo_manifest.as_deref())?;
 
-    match cmd.unwrap_or_default() {
-        GenerateCommand::TravisCI => {
-            dest.push(".travis.yml");
-            TravisCI::from(conf).render_into_config_file(dest)?;
-        }
-        GenerateCommand::CircleCI => {
-            dest.push(".circleci");
-            dest.push("config.yml");
-            CircleCI::from(conf).render_into_config_file(dest)?;
-        }
+    let res = match cmd.unwrap_or_default() {
+        GenerateCommand::TravisCI => TravisCI::from(conf).render_into_config_file(&dest),
+        GenerateCommand::CircleCI => CircleCI::from(conf).render_into_config_file(&dest),
+    };
+    if let Err(e) = res {
+        eprintln!("Generating CI config failed. {}", e);
+        return Err(e.into());
     }
     Ok(())
 }
