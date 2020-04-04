@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, path::Path};
 
 use super::CISystem;
 use crate::config::MatrixEntryExt;
@@ -21,5 +21,9 @@ impl From<TemplateCIConfig> for TravisCI {
 impl CISystem for TravisCI {
     fn write_preamble(&self, mut _output: impl io::Write) -> Result<(), super::Error> {
         Ok(())
+    }
+
+    fn config_file_name(&self, root: &Path) -> std::path::PathBuf {
+        root.join(".travis.yml")
     }
 }

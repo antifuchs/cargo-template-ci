@@ -3,7 +3,7 @@ use std::env::current_dir;
 use std::fs::create_dir_all;
 use std::io;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use custom_error::custom_error;
 
@@ -22,8 +22,8 @@ pub(crate) trait CISystem: askama::Template {
 
     /// Renders the CI system template and writes it to either the
     /// given config file or to the default location.
-    fn render_into_config_file(&self, destination: PathBuf) -> Result<(), Error> {
-        let dest = destination.as_path();
+    fn render_into_config_file(&self, root: &Path) -> Result<(), Error> {
+        let dest = self.config_file_name(root);
         let dest_dir = match dest.parent() {
             Some(dir) => dir.to_path_buf(),
             None => current_dir()?,
@@ -36,6 +36,9 @@ pub(crate) trait CISystem: askama::Template {
         output.persist(dest)?;
         Ok(())
     }
+
+    /// Returns a configuration file name from the root of the repo.
+    fn config_file_name(&self, root: &Path) -> PathBuf;
 }
 
 #[cfg(test)]
@@ -71,6 +74,9 @@ mod tests {
         fn write_preamble(&self, _output: impl io::Write) -> Result<(), super::Error> {
             Ok(())
         }
+        fn config_file_name(&self, root: &std::path::Path) -> std::path::PathBuf {
+            root.join("does_not_exist.tmp")
+        }
     }
 
     #[test]
@@ -79,7 +85,7 @@ mod tests {
         {
             let sys = NonSystem {};
             let path = dir.path();
-            sys.render_into_config_file(path.join("does_not_exist.tmp"))?;
+            sys.render_into_config_file(path)?;
             Ok(())
         }
     }
@@ -90,7 +96,7 @@ mod tests {
         {
             let sys = NonSystem {};
             let path = dir.path();
-            sys.render_into_config_file(path.join("dir_not_there/does_not_exist.tmp"))?;
+            sys.render_into_config_file(path)?;
             Ok(())
         }
     }
@@ -102,7 +108,7 @@ mod tests {
             let sys = NonSystem {};
             let path = dir.path();
             fs::create_dir(path.join("dir_exists"))?;
-            sys.render_into_config_file(path.join("dir_exists/does_not_exist.tmp"))?;
+            sys.render_into_config_file(path)?;
             Ok(())
         }
     }
