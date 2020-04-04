@@ -96,3 +96,51 @@ impl Filters {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::super::Error;
+    use super::*;
+    use io::Write;
+    use std::{fs::File, io};
+    use tempfile;
+
+    #[test]
+    fn validate_old_style_bors_config() -> Result<(), Box<dyn std::error::Error>> {
+        let sys = CircleCI::from(TemplateCIConfig::default());
+        let tmp = tempfile::tempdir()?;
+        let dir = tmp.path();
+        File::create(dir.join("bors.toml"))?
+            .write_all("status = [\"ci/circleci: ci_success\"]".as_bytes())?;
+        match sys.validate_config(dir) {
+            Err(Error::BorsConfig {
+                source: bors::Error::BadCircleStatusCheck { name },
+            }) => {
+                assert_eq!(name, "ci/circleci: ci_success");
+            }
+            other => {
+                panic!("Expected an error, got {:?}", other);
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn validate_missing_status_check() -> Result<(), Box<dyn std::error::Error>> {
+        let sys = CircleCI::from(TemplateCIConfig::default());
+        let tmp = tempfile::tempdir()?;
+        let dir = tmp.path();
+        File::create(dir.join("bors.toml"))?.write_all("status = [\"welp\"]".as_bytes())?;
+        match sys.validate_config(dir) {
+            Err(Error::BorsConfig {
+                source: bors::Error::MissingCircleStatusCheck { name },
+            }) => {
+                assert_eq!(name, "continuous_integration");
+            }
+            other => {
+                panic!("Expected an error, got {:?}", other);
+            }
+        }
+        Ok(())
+    }
+}
