@@ -14,6 +14,7 @@ custom_error! {pub Error
                TemplateError{source: askama::Error} = "could not render template",
                IOError{source: io::Error} = "could not write to CI config",
                PersistError{source: tempfile::PersistError} = "could not overwrite",
+               BorsConfig{source: crate::bors::Error} = "Could not validate bors-ng config: {}",
 }
 
 pub(crate) trait CISystem: askama::Template {
@@ -34,6 +35,13 @@ pub(crate) trait CISystem: askama::Template {
         self.write_preamble(&output)?;
         writeln!(&output, "{}", self.render()?)?;
         output.persist(dest)?;
+        self.validate_config(root)?;
+        Ok(())
+    }
+
+    /// Checks that the configuration that was generated will result
+    /// in working CI.
+    fn validate_config(&self, _root: &Path) -> Result<(), Error> {
         Ok(())
     }
 

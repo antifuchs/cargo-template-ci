@@ -6,6 +6,7 @@ use structopt::StructOpt;
 #[macro_use]
 mod macros;
 
+mod bors;
 mod ci;
 mod config;
 

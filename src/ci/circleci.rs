@@ -3,7 +3,7 @@ use std::{io, path::Path};
 
 use super::CISystem;
 use crate::config::MatrixEntryExt;
-use crate::TemplateCIConfig;
+use crate::{bors, TemplateCIConfig};
 
 use askama::Template;
 
@@ -25,6 +25,34 @@ impl From<TemplateCIConfig> for CircleCI {
 
 impl CISystem for CircleCI {
     fn write_preamble(&self, mut _output: impl io::Write) -> Result<(), super::Error> {
+        Ok(())
+    }
+
+    /// Checks a bors.toml (if it exists) for the correct CI task names.
+    fn validate_config(&self, root: &Path) -> Result<(), super::Error> {
+        let bors_cfg = bors::config(root)?;
+        if let Some(name) = bors_cfg
+            .status
+            .iter()
+            .find(|&el| el == "ci/circleci: ci_success")
+        {
+            return Err(bors::Error::BadCircleStatusCheck {
+                name: name.to_string(),
+            }
+            .into());
+        }
+
+        if bors_cfg
+            .status
+            .iter()
+            .find(|&el| el == "continuous_integration")
+            .is_none()
+        {
+            return Err(bors::Error::MissingCircleStatusCheck {
+                name: "continuous_integration".to_string(),
+            }
+            .into());
+        }
         Ok(())
     }
 
