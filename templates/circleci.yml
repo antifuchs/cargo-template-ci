@@ -112,14 +112,6 @@ jobs:
           {%- endif %}
   {%- endfor %}
 
-  ci_success:
-    docker:
-      - image: alpine:latest
-    steps:
-      - run:
-          name: Success
-          command: "echo yay"
-
 workflows:
   continuous_integration:
     jobs:
@@ -151,25 +143,6 @@ workflows:
           version: {{custom.1.version()}}
           version_name: {{custom.1.version()}}
       {%- endfor %}
-      - ci_success:
-          requires:
-          {%- for version in conf.versions %}
-          - test-{{version}}
-          {%- endfor %}
-          {%- if conf.rustfmt.run() %}
-          - rustfmt
-          {%- endif %}
-          {%- if conf.clippy.run() %}
-          - clippy
-          {%- endif %}
-          {%- if conf.bench.run() %}
-          - bench
-          {%- endif %}
-          {%- for custom in conf.additional_matrix_entries %}
-          {%- if custom.1.run() %}
-          - {{custom.0}}
-          {%- endif %}
-          {%- endfor %}
 
   {%- if !conf.scheduled_test_branches.is_empty() %}
   scheduled_tests:
